@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { AccountModule } from './account/account.module';
 import dbConfig from './config/db.config';
+import { JwtModule } from '@nestjs/jwt';
+import { ErrorLoggerModule } from './common/error_logger/error_logger.module';
 
 @Module({
   imports: [
@@ -21,6 +24,16 @@ import dbConfig from './config/db.config';
       }),
       inject: [ConfigService],
     }),
+    JwtModule.registerAsync({
+      global: true,
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET'),
+        signOptions: { expiresIn: '30d' },
+      }),
+      inject: [ConfigService],
+    }),
+    AccountModule,
+    ErrorLoggerModule,
   ],
 })
 export class AppModule {}
