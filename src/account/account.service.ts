@@ -28,7 +28,7 @@ export class AccountService {
       confirmed: false,
     });
     this.otpService.sendOTP(email);
-    return { email };
+    return null;
   }
 
   async login(loginDto: LoginDto) {
