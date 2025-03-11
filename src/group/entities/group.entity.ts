@@ -7,7 +7,6 @@ import {
   PrimaryKey,
   AutoIncrement,
   Unique,
-  Validate,
 } from 'sequelize-typescript';
 
 @Table({ tableName: 'groups', timestamps: false })
@@ -30,5 +29,5 @@ export class Group extends Model {
       return value ? JSON.parse(value) : {};
     },
   })
-  members: string[];
+  members: any;
 }

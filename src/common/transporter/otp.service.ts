@@ -30,7 +30,7 @@ export class OTPService {
   async sendOTP(email: string): Promise<void> {
     const otp = this.generateOTP();
     const expiresAt = Date.now() + 30 * 60 * 1000;
-
+    console.log(otp);
     this.otpStorage.set(email, { otp, expiresAt });
 
     const mailOptions = {
