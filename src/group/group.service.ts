@@ -57,7 +57,6 @@ export class GroupService {
   async getGroups(userID: number) {
     let groups: any = await this.groupModel.findAll({
       where: Sequelize.literal(`JSON_CONTAINS(members, '[${userID}]')`),
-      attributes: ['groupName', 'members'],
     });
     return Promise.all(
       groups.map(async (group) => {
