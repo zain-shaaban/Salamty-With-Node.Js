@@ -4,6 +4,7 @@ import { Group } from './entities/group.entity';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { AddUserToGroupDto } from './dto/add-user-to-group.dto';
 import { Account } from 'src/account/entities/account.entity';
+import { LeaveGroupDto } from './dto/leave-group.dto';
 
 @Injectable()
 export class GroupService {
@@ -31,6 +32,21 @@ export class GroupService {
     if (!group.members.find((id) => id == user.userID)) {
       let users = group.members;
       users.push(user.userID);
+      group.members = JSON.stringify(users);
+      await group.save();
+    }
+    return null;
+  }
+
+  async leaveGroup(leaveGroupDto: LeaveGroupDto, userID: number) {
+    const { groupID } = leaveGroupDto;
+
+    const group = await this.groupModel.findByPk(groupID);
+    if (!group) throw new NotFoundException('the group does not exist');
+    let users = group.members;
+    users = users.filter((id) => id != userID);
+    if (users.length == 0) await group.destroy();
+    else {
       group.members = JSON.stringify(users);
       await group.save();
     }
