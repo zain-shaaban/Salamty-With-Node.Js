@@ -5,6 +5,7 @@ import { CreateGroupDto } from './dto/create-group.dto';
 import { AddUserToGroupDto } from './dto/add-user-to-group.dto';
 import { Account } from 'src/account/entities/account.entity';
 import { LeaveGroupDto } from './dto/leave-group.dto';
+import { Op, Sequelize } from 'sequelize';
 
 @Injectable()
 export class GroupService {
@@ -51,5 +52,27 @@ export class GroupService {
       await group.save();
     }
     return null;
+  }
+
+  async getGroups(userID: number) {
+    let groups: any = await this.groupModel.findAll({
+      where: Sequelize.literal(`JSON_CONTAINS(members, '[${userID}]')`),
+      attributes: ['groupName', 'members'],
+    });
+    return Promise.all(
+      groups.map(async (group) => {
+        return await this.accountModel
+          .findAll({
+            where: { userID: { [Op.in]: group.members } },
+            attributes: ['username'],
+          })
+          .then((accounts) => {
+            group.members = JSON.stringify(
+              accounts.map((account) => account.username),
+            );
+            return group;
+          });
+      }),
+    );
   }
 }

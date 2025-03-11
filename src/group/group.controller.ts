@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { GroupService } from './group.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { asyncHandler } from 'src/common/utils/async-handler';
@@ -33,5 +33,10 @@ export class GroupController {
     return await asyncHandler(
       this.groupService.leaveGroup(leaveGroupDto, request.user.userID),
     );
+  }
+
+  @Get('get')
+  async getGroups(@Req() request) {
+    return await asyncHandler(this.groupService.getGroups(request.user.userID));
   }
 }
