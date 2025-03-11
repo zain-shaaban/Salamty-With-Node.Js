@@ -36,12 +36,11 @@ export class GroupService {
       group.members = JSON.stringify(users);
       await group.save();
     }
-    return null;
+    return { username: user.username };
   }
 
   async leaveGroup(leaveGroupDto: LeaveGroupDto, userID: number) {
     const { groupID } = leaveGroupDto;
-
     const group = await this.groupModel.findByPk(groupID);
     if (!group) throw new NotFoundException('the group does not exist');
     let users = group.members;
