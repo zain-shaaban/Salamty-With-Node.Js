@@ -20,10 +20,10 @@ export class AccountAuthGuard implements CanActivate {
       const request = context.switchToHttp().getRequest();
       const token = request.header('Authorization')?.split(' ')[1];
       if (!token) throw new UnauthorizedException('Invalid token');
-      const { id } = this.jwtService.verify(token);
-      if (!(await this.accountModel.findByPk(id)))
+      const { userID } = this.jwtService.verify(token);
+      if (!(await this.accountModel.findByPk(userID)))
         throw new UnauthorizedException('Invalid token');
-      request.user = { id };
+      request.user = { userID };
       return true;
     } catch (error) {
       throw new UnauthorizedException('Invalid token');

@@ -5,6 +5,7 @@ import { AccountModule } from './account/account.module';
 import dbConfig from './config/db.config';
 import { JwtModule } from '@nestjs/jwt';
 import { ErrorLoggerModule } from './common/error_logger/error_logger.module';
+import { GroupModule } from './group/group.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ErrorLoggerModule } from './common/error_logger/error_logger.module';
     }),
     AccountModule,
     ErrorLoggerModule,
+    GroupModule,
   ],
 })
 export class AppModule {}

@@ -41,7 +41,7 @@ export class AccountService {
       throw new UnauthorizedException('the email is unconfirmed');
     const authToken = this.jwtService.sign({ userID: user.userID });
     await user.save();
-    return { authToken, secretKey: user.secretKey };
+    return { authToken, username: user.username };
   }
 
   async verifyOTP(verifyOTPDto: VerifyOTPDto) {
@@ -55,5 +55,13 @@ export class AccountService {
     const authToken = this.jwtService.sign({ userID: user.userID });
     await user.save();
     return { authToken, secretKey: user.secretKey };
+  }
+
+  async regenerate(userID: number) {
+    const user = await this.accountModel.findByPk(userID);
+    if (!user) throw new NotFoundException();
+    user.secretKey = uuid();
+    await user.save();
+    return { secretKey: user.secretKey };
   }
 }

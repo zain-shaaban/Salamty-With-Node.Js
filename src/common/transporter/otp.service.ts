@@ -34,7 +34,7 @@ export class OTPService {
     this.otpStorage.set(email, { otp, expiresAt });
 
     const mailOptions = {
-      from: '"salamty" <salamty@gmail.com>',
+      from: '"salamty" <zeinshaban433@gmail.com>',
       to: email,
       subject: 'Your OTP Code',
       text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
