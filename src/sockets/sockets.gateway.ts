@@ -50,17 +50,17 @@ export class SocketsGateway
       onlineUsers = await Promise.all(
         onlineUsers.map(async (user) => {
           if (
-            Date.now() - user.lastLocation.time > 1000 * 60 * 10 &&
+            Date.now() - user.location.time > 1000 * 60 &&
             user.socketID == null
           ) {
             user.offline = true;
             await this.accountModel.update(
-              { lastLocation: JSON.stringify(user.lastLocation) },
+              { location: JSON.stringify(user.location) },
               { where: { userID: user.userID } },
             );
             return user;
           } else if (
-            Date.now() - user.lastLocation.time > 1000 * 60 * 5 &&
+            Date.now() - user.location.time > 1000 * 30 &&
             user.socketID == null &&
             user.notificationSent == false
           ) {
@@ -77,13 +77,12 @@ export class SocketsGateway
         }),
       );
       deleteOfflineUsersFromAllGroups();
-    }, 1000 * 60);
+    }, 1000 * 20);
   }
 
   handleConnection(client: Socket) {
     try {
-      const { userID, username, lastLocation, groupID } =
-        this.getDetails(client);
+      const { userID, username, location, groupID } = this.getDetails(client);
       let user = onlineUsers.find((user) => user.userID == userID);
       if (!user) {
         onlineUsers.push({
@@ -91,13 +90,13 @@ export class SocketsGateway
           username,
           groupID,
           userID,
-          lastLocation,
+          location,
           notificationSent: false,
           offline: false,
         });
       } else {
         user.socketID = client.id;
-        user.lastLocation = lastLocation;
+        user.location = location;
         user.notificationSent = false;
         user.offline = false;
       }
@@ -133,13 +132,13 @@ export class SocketsGateway
   getDetails(client: Socket) {
     const token: any = client.handshake.query.authToken;
     const groupID: any = client.handshake.query.groupID;
-    const lastLocation: any = client.handshake.query.lastLocation;
+    const location: any = client.handshake.query.location;
     const { userID, username } = this.jwtService.verify(token);
     return {
       userID: Number(userID),
       username,
       groupID,
-      lastLocation: JSON.parse(lastLocation),
+      location: JSON.parse(location),
     };
   }
 }

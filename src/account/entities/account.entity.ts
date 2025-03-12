@@ -42,11 +42,11 @@ export class Account extends Model {
     type: DataType.STRING,
     allowNull: true,
     get() {
-      const value = this.getDataValue('lastLocation');
+      const value = this.getDataValue('location');
       return value ? JSON.parse(value) : {};
     },
   })
-  lastLocation: any;
+  location: any;
 
   @Column(DataType.STRING)
   notificationToken: string;

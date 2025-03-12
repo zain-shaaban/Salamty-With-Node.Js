@@ -13,6 +13,7 @@ import { OTPService } from 'src/common/transporter/otp.service';
 import { v4 as uuid } from 'uuid';
 import { VerifyOTPDto } from './dto/verify.dto';
 import { UpdateNotificationTokenDto } from './dto/update-notification-token.dto';
+import { sendLocationDto } from './dto/send-location.dto';
 @Injectable()
 export class AccountService {
   constructor(
@@ -83,4 +84,30 @@ export class AccountService {
     );
     return null;
   }
+
+  // async sendNewLocation(sendLocationData: sendLocationDto) {
+  //   const { groupID, location } = sendLocationData;
+  //   const oneDriver = onlineDrivers.find(
+  //     (driver) => driver.driverID == driverID,
+  //   );
+  //   if (!oneDriver) throw new NotFoundException();
+  //   oneDriver.location = location;
+  //   oneDriver.lastLocation = Date.now();
+  //   if (oneDriver.available == false) {
+  //     const oneTrip = ongoingTrips.find(
+  //       (trip) => trip.driverID == oneDriver.driverID,
+  //     );
+  //     if (oneTrip) {
+  //       if (oneTrip.alternative == false) {
+  //         if (typeof oneTrip.tripState.onVendor.time == 'number')
+  //           oneTrip.rawPath.push(location);
+  //       } else if (oneTrip.alternative == true) {
+  //         if (oneTrip.tripState.wayPoints.length > 0)
+  //           oneTrip.rawPath.push(location);
+  //       }
+  //     }
+  //   }
+  //   this.adminGateway.sendNewLocation(driverID, location);
+  //   return null;
+  // }
 }
