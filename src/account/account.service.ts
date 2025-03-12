@@ -12,6 +12,7 @@ import { JwtService } from '@nestjs/jwt';
 import { OTPService } from 'src/common/transporter/otp.service';
 import { v4 as uuid } from 'uuid';
 import { VerifyOTPDto } from './dto/verify.dto';
+import { UpdateNotificationTokenDto } from './dto/update-notification-token.dto';
 @Injectable()
 export class AccountService {
   constructor(
@@ -39,7 +40,10 @@ export class AccountService {
     if (!auth) throw new UnauthorizedException('Wrong credentials');
     if (!user.confirmed)
       throw new UnauthorizedException('the email is unconfirmed');
-    const authToken = this.jwtService.sign({ userID: user.userID });
+    const authToken = this.jwtService.sign({
+      userID: user.userID,
+      username: user.username,
+    });
     await user.save();
     return { authToken, username: user.username };
   }
@@ -52,7 +56,10 @@ export class AccountService {
     if (!user) throw new NotFoundException();
     user.confirmed = true;
     user.secretKey = uuid();
-    const authToken = this.jwtService.sign({ userID: user.userID });
+    const authToken = this.jwtService.sign({
+      userID: user.userID,
+      username: user.username,
+    });
     await user.save();
     return { authToken, secretKey: user.secretKey };
   }
@@ -63,5 +70,17 @@ export class AccountService {
     user.secretKey = uuid();
     await user.save();
     return { secretKey: user.secretKey };
+  }
+
+  async updateNotificationToken(
+    updateNotificationTokenDto: UpdateNotificationTokenDto,
+    userID: number,
+  ) {
+    const { notificationToken } = updateNotificationTokenDto;
+    await this.accountModel.update(
+      { notificationToken },
+      { where: { userID } },
+    );
+    return null;
   }
 }

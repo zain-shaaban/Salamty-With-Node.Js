@@ -7,6 +7,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { ErrorLoggerModule } from './common/error_logger/error_logger.module';
 import { GroupModule } from './group/group.module';
 import { SocketsModule } from './sockets/sockets.module';
+import { NotificationModule } from './notification/notification.module';
+import { FirebaseModule } from './firebase/firebase.module';
 
 @Module({
   imports: [
@@ -34,10 +36,12 @@ import { SocketsModule } from './sockets/sockets.module';
       }),
       inject: [ConfigService],
     }),
+    NotificationModule,
     AccountModule,
     ErrorLoggerModule,
     GroupModule,
     SocketsModule,
+    FirebaseModule,
   ],
 })
 export class AppModule {}

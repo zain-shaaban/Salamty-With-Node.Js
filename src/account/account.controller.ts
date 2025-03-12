@@ -1,17 +1,11 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Req,
-  Patch,
-} from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Patch } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { asyncHandler } from 'src/common/utils/async-handler';
 import { VerifyOTPDto } from './dto/verify.dto';
 import { AccountAuthGuard } from 'src/common/guards/account.guard';
+import { UpdateNotificationTokenDto } from './dto/update-notification-token.dto';
 
 @Controller('account')
 export class AccountController {
@@ -36,5 +30,19 @@ export class AccountController {
   @Patch('regenerate')
   async regenerate(@Req() req) {
     return await asyncHandler(this.accountService.regenerate(req.user.userID));
+  }
+
+  @UseGuards(AccountAuthGuard)
+  @Patch('update')
+  async updateNotificationToken(
+    @Body() updateNotificationTokenDto: UpdateNotificationTokenDto,
+    @Req() request,
+  ) {
+    return await asyncHandler(
+      this.accountService.updateNotificationToken(
+        updateNotificationTokenDto,
+        request.user.userID,
+      ),
+    );
   }
 }

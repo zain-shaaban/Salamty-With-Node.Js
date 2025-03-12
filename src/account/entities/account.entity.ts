@@ -37,4 +37,17 @@ export class Account extends Model {
 
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   confirmed: boolean;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    get() {
+      const value = this.getDataValue('lastLocation');
+      return value ? JSON.parse(value) : {};
+    },
+  })
+  lastLocation: any;
+
+  @Column(DataType.STRING)
+  notificationToken: string;
 }
