@@ -39,12 +39,8 @@ export class Account extends Model {
   confirmed: boolean;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.JSONB,
     allowNull: true,
-    get() {
-      const value = this.getDataValue('lastLocation');
-      return value ? JSON.parse(value) : {};
-    },
   })
   lastLocation: any;
 

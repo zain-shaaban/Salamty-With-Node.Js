@@ -18,7 +18,7 @@ export class GroupService {
     const { groupName } = createGroupDto;
     const { groupID } = await this.groupModel.create({
       groupName,
-      members: JSON.stringify([userID]),
+      members: [userID],
     });
     return { groupID };
   }
@@ -31,10 +31,9 @@ export class GroupService {
     const user = await this.accountModel.findOne({ where: { secretKey } });
     if (!user) throw new NotFoundException('user not found');
     if (!group.members.find((id) => id == user.userID)) {
-      let users = group.members;
-      users.push(user.userID);
-      group.members = JSON.stringify(users);
-      await group.save();
+      let members = [...group.members];
+      members.push(user.userID);
+      await group.update({members});
     }
     return { username: user.username };
   }
@@ -47,15 +46,15 @@ export class GroupService {
     users = users.filter((id) => id != userID);
     if (users.length == 0) await group.destroy();
     else {
-      group.members = JSON.stringify(users);
+      group.members = users;
       await group.save();
     }
     return null;
   }
 
   async getGroups(userID: number) {
-    let groups: any = await this.groupModel.findAll({
-      where: Sequelize.literal(`JSON_CONTAINS(members, '[${userID}]')`),
+    const groups = await this.groupModel.findAll({
+      where: Sequelize.literal(`members @> '[${userID}]'`),
     });
     return Promise.all(
       groups.map(async (group) => {
@@ -65,9 +64,7 @@ export class GroupService {
             attributes: ['username'],
           })
           .then((accounts) => {
-            group.members = JSON.stringify(
-              accounts.map((account) => account.username),
-            );
+            group.members = accounts.map((account) => account.username);
             return group;
           });
       }),

@@ -55,7 +55,7 @@ export class SocketsGateway
           ) {
             user.offline = true;
             await this.accountModel.update(
-              { lastLocation: JSON.stringify(user.location) },
+              { lastLocation: user.location },
               { where: { userID: user.userID } },
             );
             return user;

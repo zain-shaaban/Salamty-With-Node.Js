@@ -15,7 +15,7 @@ import { FirebaseModule } from './firebase/firebase.module';
     ConfigModule.forRoot({ isGlobal: true, load: [dbConfig] }),
     SequelizeModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
-        dialect: 'mysql',
+        dialect: 'postgres',
         host: configService.get('database.host'),
         port: configService.get('database.port'),
         username: configService.get('database.user'),

@@ -22,12 +22,8 @@ export class Group extends Model {
   groupName: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.JSONB,
     allowNull: false,
-    get() {
-      const value = this.getDataValue('members');
-      return value ? JSON.parse(value) : {};
-    },
   })
   members: any;
 }
