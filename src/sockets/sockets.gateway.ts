@@ -68,7 +68,7 @@ export class SocketsGateway
             this.notificationService.send({
               groupID: user.groupID,
               title: 'سلامتي - إشعار تفقد',
-              content: `لم يرسل (${user.username}) موقعه منذ 30 دقيقة`,
+              content: `لم يرسل ${user.username} موقعه منذ 30 دقيقة`,
             });
             return user;
           } else {
@@ -140,5 +140,9 @@ export class SocketsGateway
       groupID,
       location: JSON.parse(location),
     };
+  }
+
+  sendNewLocation(groupID: string, userID: number, location: object) {
+    this.io.to(groupID).emit('location', { userID, location });
   }
 }

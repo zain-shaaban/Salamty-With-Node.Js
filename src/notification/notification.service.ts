@@ -26,6 +26,7 @@ export class NotificationService {
         attributes: ['notificationToken'],
       });
       accounts.forEach((account) => {
+        console.log(account.notificationToken);
         const message = {
           token: account.notificationToken,
           notification: {

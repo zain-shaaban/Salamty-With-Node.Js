@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString, Max } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+} from 'class-validator';
 
 class coords {
   @IsNumber()
@@ -18,7 +24,7 @@ class location {
   time: number;
 }
 
-export class sendLocationDto {
+export class SendLocationDto {
   @IsString()
   @IsNotEmpty()
   groupID: string;

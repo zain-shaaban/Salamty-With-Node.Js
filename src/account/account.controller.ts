@@ -6,6 +6,8 @@ import { asyncHandler } from 'src/common/utils/async-handler';
 import { VerifyOTPDto } from './dto/verify.dto';
 import { AccountAuthGuard } from 'src/common/guards/account.guard';
 import { UpdateNotificationTokenDto } from './dto/update-notification-token.dto';
+import { Account } from './entities/account.entity';
+import { SendLocationDto } from './dto/send-location.dto';
 
 @Controller('account')
 export class AccountController {
@@ -43,6 +45,17 @@ export class AccountController {
         updateNotificationTokenDto,
         request.user.userID,
       ),
+    );
+  }
+
+  @UseGuards(AccountAuthGuard)
+  @Post('location')
+  async sendNewLocation(
+    @Body() sendLocationDto: SendLocationDto,
+    @Req() request,
+  ) {
+    return await asyncHandler(
+      this.accountService.sendNewLocation(sendLocationDto, request.user.userID),
     );
   }
 }
