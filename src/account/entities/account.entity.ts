@@ -20,7 +20,7 @@ export class Account extends Model {
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  username: string;
+  userName: string;
 
   @Validate({ isEmail: true })
   @Unique

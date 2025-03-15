@@ -68,7 +68,7 @@ export class SocketsGateway
             this.notificationService.send({
               groupID: user.groupID,
               title: 'سلامتي - إشعار تفقد',
-              content: `لم يرسل ${user.username} موقعه منذ 30 دقيقة`,
+              content: `لم يرسل ${user.userName} موقعه منذ 30 دقيقة`,
             });
             return user;
           } else {
@@ -82,12 +82,12 @@ export class SocketsGateway
 
   handleConnection(client: Socket) {
     try {
-      const { userID, username, location, groupID } = this.getDetails(client);
+      const { userID, userName, location, groupID } = this.getDetails(client);
       let user = onlineUsers.find((user) => user.userID == userID);
       if (!user) {
         onlineUsers.push({
           socketID: client.id,
-          username,
+          userName,
           groupID,
           userID,
           location,
@@ -101,6 +101,10 @@ export class SocketsGateway
         user.offline = false;
       }
       client.join(groupID);
+      // let allGroupMembers = onlineUsers.filter(
+      //   (user) => user.groupID == groupID,
+      // );
+      // console.log(allGroupMembers);
       return { status: true };
     } catch (error) {
       this.logger.error(error.message, error.stack);
@@ -133,10 +137,10 @@ export class SocketsGateway
     const token: any = client.handshake.query.authToken;
     const groupID: any = client.handshake.query.groupID;
     const location: any = client.handshake.query.location;
-    const { userID, username } = this.jwtService.verify(token);
+    const { userID, userName } = this.jwtService.verify(token);
     return {
       userID: Number(userID),
-      username,
+      userName,
       groupID,
       location: JSON.parse(location),
     };

@@ -10,7 +10,7 @@ export class SignUpDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  username: string;
+  userName: string;
 
   @IsString()
   @IsNotEmpty()

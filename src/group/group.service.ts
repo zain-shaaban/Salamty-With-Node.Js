@@ -33,9 +33,9 @@ export class GroupService {
     if (!group.members.find((id) => id == user.userID)) {
       let members = [...group.members];
       members.push(user.userID);
-      await group.update({members});
+      await group.update({ members });
     }
-    return { username: user.username };
+    return { userName: user.userName,userID:user.userID };
   }
 
   async leaveGroup(leaveGroupDto: LeaveGroupDto, userID: number) {
@@ -61,10 +61,13 @@ export class GroupService {
         return await this.accountModel
           .findAll({
             where: { userID: { [Op.in]: group.members } },
-            attributes: ['username'],
+            attributes: ['userName', 'userID'],
           })
           .then((accounts) => {
-            group.members = accounts.map((account) => account.username);
+            group.members = accounts.map((account) => ({
+              userName: account.userName,
+              userID: account.userID,
+            }));
             return group;
           });
       }),

@@ -25,10 +25,10 @@ export class AccountService {
     private readonly otpService: OTPService,
   ) {}
   async signUp(signUpDto: SignUpDto) {
-    const { email, password, username } = signUpDto;
+    const { email, password, userName } = signUpDto;
     await this.accountModel.create({
       email,
-      username,
+      userName,
       password: bcrypt.hashSync(password),
       confirmed: false,
     });
@@ -46,10 +46,10 @@ export class AccountService {
       throw new UnauthorizedException('the email is unconfirmed');
     const authToken = this.jwtService.sign({
       userID: user.userID,
-      username: user.username,
+      userName: user.userName,
     });
     await user.save();
-    return { authToken, username: user.username };
+    return { authToken, userName: user.userName };
   }
 
   async verifyOTP(verifyOTPDto: VerifyOTPDto) {
@@ -62,7 +62,7 @@ export class AccountService {
     user.secretKey = uuid();
     const authToken = this.jwtService.sign({
       userID: user.userID,
-      username: user.username,
+      userName: user.userName,
     });
     await user.save();
     return { authToken, secretKey: user.secretKey };
@@ -93,7 +93,7 @@ export class AccountService {
     const oneUser = onlineUsers.find((user) => user.userID == userID);
     if (!oneUser) throw new NotFoundException();
     oneUser.location = location;
-    oneUser.location.time = oneUser.location.time * 1000;
+    //oneUser.location.time = oneUser.location.time*1000;
     this.socketsGateway.sendNewLocation(groupID, userID, location);
     return null;
   }
