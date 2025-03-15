@@ -90,9 +90,12 @@ export class AccountService {
 
   async sendNewLocation(sendLocationData: SendLocationDto, userID: number) {
     const { groupID, location } = sendLocationData;
-    const oneUser = onlineUsers.find((user) => user.userID == userID);
+    const oneUser = onlineUsers.find(
+      (user) => user.userID == userID && user.groupID == groupID,
+    );
     if (!oneUser) throw new NotFoundException();
     oneUser.location = location;
+    oneUser.offline = false;
     //oneUser.location.time = oneUser.location.time * 1000;
     this.socketsGateway.sendNewLocation(groupID, userID, location);
     return null;

@@ -1,4 +1,4 @@
-import { Inject } from '@nestjs/common';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
 import {
@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { Account } from 'src/account/entities/account.entity';
 
 import { ErrorLoggerService } from 'src/common/error_logger/error_logger.service';
+import { Group } from 'src/group/entities/group.entity';
 import { NotificationService } from 'src/notification/notification.service';
 
 export let onlineUsers: any = [];
@@ -43,6 +44,7 @@ export class SocketsGateway
   constructor(
     private readonly logger: ErrorLoggerService,
     @InjectModel(Account) private readonly accountModel: typeof Account,
+    @InjectModel(Group) private readonly groupModel: typeof Group,
     @Inject() private readonly notificationService: NotificationService,
     private readonly jwtService: JwtService,
   ) {
@@ -80,9 +82,12 @@ export class SocketsGateway
     }, 1000 * 20);
   }
 
-  handleConnection(client: Socket) {
+  async handleConnection(client: Socket) {
     try {
       const { userID, userName, location, groupID } = this.getDetails(client);
+      const group = await this.groupModel.findByPk(groupID);
+      if (!group || !group.members.find((id) => id == userID))
+        client.disconnect();
       let user = onlineUsers.find((user) => user.userID == userID);
       if (!user) {
         onlineUsers.push({
@@ -150,7 +155,18 @@ export class SocketsGateway
     };
   }
 
-  sendNewLocation(groupID: string, userID: number, location: object) {
-    this.io.to(groupID).emit('location', { userID, location });
+  sendNewLocation(
+    groupID: string,
+    userID: number,
+    location: object,
+  ) {
+    onlineUsers.map((user) => {
+      if (
+        user.groupID == groupID &&
+        user.userID != userID &&
+        user.socketID != null
+      )
+        this.io.to(user.socketID).emit('location', { userID, location });
+    });
   }
 }
