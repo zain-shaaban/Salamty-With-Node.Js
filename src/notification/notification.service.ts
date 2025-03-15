@@ -25,17 +25,18 @@ export class NotificationService {
         },
         attributes: ['notificationToken'],
       });
-      accounts.forEach((account) => {
-        console.log(account.notificationToken);
-        const message = {
-          token: account.notificationToken,
-          notification: {
-            title,
-            body: content,
-          },
-        };
-        this.firebaseService.messaging().send(message);
-      });
+      await Promise.all(
+        accounts.map(async (account) => {
+          const message = {
+            token: account.notificationToken,
+            notification: {
+              title,
+              body: content,
+            },
+          };
+          await this.firebaseService.messaging().send(message);
+        }),
+      );
       return null;
     } catch (error) {
       logger.error(error.message, error.stack);

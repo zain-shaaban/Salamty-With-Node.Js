@@ -11,14 +11,9 @@ export class FirebaseService implements OnModuleInit {
       const serviceAccountEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
 
       if (!serviceAccountEnv) {
-        logger.error(
+        throw new Error(
           'FIREBASE_SERVICE_ACCOUNT environment variable is not set',
-          '',
         );
-        return {
-          status: false,
-          message: 'FIREBASE_SERVICE_ACCOUNT environment variable is not set',
-        };
       }
 
       try {
@@ -31,7 +26,7 @@ export class FirebaseService implements OnModuleInit {
         });
       } catch (error) {
         logger.error(error.message, error.stack);
-        return {status:false,message:`Firebase initialization failed: ${error.message}`};
+        throw new Error(`Firebase initialization failed: ${error.message}`);
       }
     } else {
       this.firebaseAdmin = admin.app();
@@ -40,7 +35,7 @@ export class FirebaseService implements OnModuleInit {
 
   messaging(): admin.messaging.Messaging {
     if (!this.firebaseAdmin) {
-      logger.error('Firebase Admin is not initialized','')
+      throw new Error('Firebase Admin is not initialized');
     }
     return this.firebaseAdmin.messaging();
   }

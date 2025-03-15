@@ -101,10 +101,14 @@ export class SocketsGateway
         user.offline = false;
       }
       client.join(groupID);
-      // let allGroupMembers = onlineUsers.filter(
-      //   (user) => user.groupID == groupID,
-      // );
-      // console.log(allGroupMembers);
+      let allGroupMembers = onlineUsers.filter(
+        (user) => user.groupID == groupID && user.userID != userID,
+      );
+      allGroupMembers = allGroupMembers.map((user) => {
+        let myUser = { userID: user.userID, location: user.location };
+        return myUser;
+      });
+      client.emit('onConnection', { onlineUsers: allGroupMembers });
       return { status: true };
     } catch (error) {
       this.logger.error(error.message, error.stack);

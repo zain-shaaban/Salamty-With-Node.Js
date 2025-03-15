@@ -93,7 +93,7 @@ export class AccountService {
     const oneUser = onlineUsers.find((user) => user.userID == userID);
     if (!oneUser) throw new NotFoundException();
     oneUser.location = location;
-    //oneUser.location.time = oneUser.location.time*1000;
+    //oneUser.location.time = oneUser.location.time * 1000;
     this.socketsGateway.sendNewLocation(groupID, userID, location);
     return null;
   }
