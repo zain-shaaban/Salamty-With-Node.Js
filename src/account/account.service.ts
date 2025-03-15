@@ -95,6 +95,7 @@ export class AccountService {
     );
     if (!oneUser) throw new NotFoundException();
     oneUser.location = location;
+    oneUser.notificationSent = false;
     oneUser.offline = false;
     //oneUser.location.time = oneUser.location.time * 1000;
     this.socketsGateway.sendNewLocation(groupID, userID, location);
