@@ -114,6 +114,7 @@ export class SocketsGateway
         return myUser;
       });
       client.emit('onConnection', { onlineUsers: allGroupMembers });
+      this.sendNewLocation(groupID, userID, location);
       return { status: true };
     } catch (error) {
       this.logger.error(error.message, error.stack);
@@ -155,11 +156,7 @@ export class SocketsGateway
     };
   }
 
-  sendNewLocation(
-    groupID: string,
-    userID: number,
-    location: object,
-  ) {
+  sendNewLocation(groupID: string, userID: number, location: object) {
     onlineUsers.map((user) => {
       if (
         user.groupID == groupID &&
