@@ -54,7 +54,7 @@ export class AccountService {
 
   async verifyOTP(verifyOTPDto: VerifyOTPDto) {
     const { email, otp } = verifyOTPDto;
-    const verify = this.otpService.verifyOTP(email, otp);
+    const verify = await this.otpService.verifyOTP(email, otp);
     if (!verify) throw new UnauthorizedException('Invalid otp');
     const user = await this.accountModel.findOne({ where: { email } });
     if (!user) throw new NotFoundException();
@@ -97,7 +97,7 @@ export class AccountService {
     oneUser.location = location;
     oneUser.notificationSent = false;
     oneUser.offline = false;
-  //  oneUser.location.time = oneUser.location.time * 1000;
+    //oneUser.location.time = oneUser.location.time * 1000;
     this.socketsGateway.sendNewLocation(groupID, userID, location);
     return null;
   }

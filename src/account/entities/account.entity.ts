@@ -47,4 +47,10 @@ export class Account extends Model {
 
   @Column(DataType.STRING)
   notificationToken: string;
+
+  @Column({ type: DataType.STRING })
+  otp: string;
+
+  @Column({ type: DataType.BIGINT })
+  otpExpiry: number;
 }
