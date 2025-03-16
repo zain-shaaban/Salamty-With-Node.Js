@@ -127,10 +127,21 @@ export class SocketsGateway
         allGroups.push(myGroup);
       } else {
         const user = myGroup.members.find((user) => user.userID == userID);
-        user.socketID = socketID;
-        user.location = location;
-        user.notificationSent = false;
-        user.offline = false;
+        if (user) {
+          user.socketID = socketID;
+          user.location = location;
+          user.notificationSent = false;
+          user.offline = false;
+        } else {
+          myGroup.members.push({
+            userID,
+            socketID,
+            userName,
+            location,
+            notificationSent: false,
+            offline: false,
+          });
+        }
       }
       client.join(groupID);
       let allGroupMembers = allGroups.find(
