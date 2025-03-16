@@ -41,6 +41,7 @@ export class Account extends Model {
   @Column({
     type: DataType.JSONB,
     allowNull: true,
+    defaultValue: [],
   })
   lastLocation: any;
 

@@ -15,7 +15,7 @@ import { v4 as uuid } from 'uuid';
 import { VerifyOTPDto } from './dto/verify.dto';
 import { UpdateNotificationTokenDto } from './dto/update-notification-token.dto';
 import { SendLocationDto } from './dto/send-location.dto';
-import { onlineUsers, SocketsGateway } from 'src/sockets/sockets.gateway';
+import { allGroups, SocketsGateway } from 'src/sockets/sockets.gateway';
 @Injectable()
 export class AccountService {
   constructor(
@@ -90,14 +90,14 @@ export class AccountService {
 
   async sendNewLocation(sendLocationData: SendLocationDto, userID: number) {
     const { groupID, location } = sendLocationData;
-    const oneUser = onlineUsers.find(
-      (user) => user.userID == userID && user.groupID == groupID,
-    );
+    const group = allGroups.find((group) => group.groupID == groupID);
+    if (!group) throw new NotFoundException();
+    const oneUser = group.members.find((user) => user.userID == userID);
     if (!oneUser) throw new NotFoundException();
     oneUser.location = location;
     oneUser.notificationSent = false;
     oneUser.offline = false;
-    //oneUser.location.time = oneUser.location.time * 1000;
+  //  oneUser.location.time = oneUser.location.time * 1000;
     this.socketsGateway.sendNewLocation(groupID, userID, location);
     return null;
   }
