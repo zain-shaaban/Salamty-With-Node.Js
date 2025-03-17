@@ -68,6 +68,7 @@ export class SocketsGateway
               ) {
                 user.notificationSent = true;
                 this.notificationService.send({
+                  userID:user.userID,
                   groupID: group.groupID,
                   title: 'سلامتي - إشعار تفقد',
                   content: `لم يرسل ${user.userName} موقعه منذ 30 دقيقة`,

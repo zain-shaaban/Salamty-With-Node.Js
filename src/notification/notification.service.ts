@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { FirebaseService } from 'src/firebase/firebase.service';
@@ -17,11 +17,13 @@ export class NotificationService {
 
   async send(createNotificationDto: CreateNotificationDto) {
     try {
-      const { groupID, title, content } = createNotificationDto;
+      const { userID, groupID, title, content } = createNotificationDto;
       let group = await this.groupModel.findByPk(groupID);
       const accounts = await this.accountModel.findAll({
         where: {
-          userID: { [Op.in]: group.members },
+          userID: {
+            [Op.in]: group.members.filter((user) => user != userID),
+          },
         },
         attributes: ['notificationToken'],
       });

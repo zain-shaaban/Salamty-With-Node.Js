@@ -16,6 +16,7 @@ import { VerifyOTPDto } from './dto/verify.dto';
 import { UpdateNotificationTokenDto } from './dto/update-notification-token.dto';
 import { SendLocationDto } from './dto/send-location.dto';
 import { allGroups, SocketsGateway } from 'src/sockets/sockets.gateway';
+import { ResendOtpDto } from './dto/resend-otp.dto';
 @Injectable()
 export class AccountService {
   constructor(
@@ -88,8 +89,8 @@ export class AccountService {
     return null;
   }
 
-  async sendNewLocation(sendLocationData: SendLocationDto, userID: number) {
-    const { groupID, location } = sendLocationData;
+  async sendNewLocation(sendLocationDto: SendLocationDto, userID: number) {
+    const { groupID, location } = sendLocationDto;
     const group = allGroups.find((group) => group.groupID == groupID);
     if (!group) throw new NotFoundException();
     const oneUser = group.members.find((user) => user.userID == userID);
@@ -97,8 +98,14 @@ export class AccountService {
     oneUser.location = location;
     oneUser.notificationSent = false;
     oneUser.offline = false;
-    //oneUser.location.time = oneUser.location.time * 1000;
+   // oneUser.location.time = oneUser.location.time * 1000;
     this.socketsGateway.sendNewLocation(groupID, userID, location);
+    return null;
+  }
+
+  async resetOTP(resendOtpDto: ResendOtpDto) {
+    const { email } = resendOtpDto;
+    this.otpService.sendOTP(email);
     return null;
   }
 }

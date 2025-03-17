@@ -7,6 +7,7 @@ import { VerifyOTPDto } from './dto/verify.dto';
 import { AccountAuthGuard } from 'src/common/guards/account.guard';
 import { UpdateNotificationTokenDto } from './dto/update-notification-token.dto';
 import { SendLocationDto } from './dto/send-location.dto';
+import { ResendOtpDto } from './dto/resend-otp.dto';
 
 @Controller('account')
 export class AccountController {
@@ -56,5 +57,10 @@ export class AccountController {
     return await asyncHandler(
       this.accountService.sendNewLocation(sendLocationDto, request.user.userID),
     );
+  }
+
+  @Patch('resendotp')
+  async resetOTP(@Body() resendOtpDto: ResendOtpDto) {
+    return await asyncHandler(this.accountService.resetOTP(resendOtpDto));
   }
 }
