@@ -46,61 +46,38 @@ export class OTPService {
       from: '"salamty" <salamty@gmail.com>',
       to: email,
       subject: 'Your OTP Code',
-      html: `<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تأكيد الحساب</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Tahoma', sans-serif; background-color: #f3f4f6;">
-<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
-  <tr>
-    <td align="center" style="padding: 40px 20px;">
-      <!-- Main Content Card -->
-      <table width="100%" max-width="600" style="background: #FAFCFF; border-radius: 8px; overflow: hidden;">
-        <!-- Header Section -->
-        <tr>
-          <td style="padding: 30px 25px; background-color: #FAFCFF;">
-            <h1 style="color: #27304A; margin: 0; font-size: 24px; font-weight: bold; text-align: center;">
-              تأكيد الحساب
-            </h1>
-          </td>
-        </tr>
-
-        <!-- Centered Content Body -->
-        <tr>
-          <td style="padding: 35px 25px; text-align: center;">
-            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
-              مرحباً ${account.userName}،<br>
-              :رمز التأكيد الخاص بك هو
-            </p>
-            <div style="background: #e8f0fe; padding: 20px; 
-                      margin: 0 auto; border-radius: 6px; 
-                      text-align: center; font-size: 28px;
-                      color: #2a3b66; font-weight: bold;
-                      letter-spacing: 2px;">
-              ${otp}
-            </div>
-          </td>
-        </tr>
-
-        <!-- Ribbon Footer -->
-        <tr>
-          <td style="background-color: #00D478; padding: 18px 25px;">
-            <p style="color: #ffffff; font-size: 14px; margin: 0; text-align: center;">
-              تطبيق سلامتي
-              <span style="color: #ffffff; opacity: 0.7; margin: 0 8px;">|</span>
-              نظام التأكيد الآلي
-            </p>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-</body>
-</html>`,
+      html: `<div dir="rtl" lang="ar" style="margin: 0; padding: 40px 20px; font-family: Tahoma, sans-serif; background-color: #f3f4f6;">
+    <div style="max-width: 600px; margin: 0 auto; background: #FAFCFF; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+      
+      <div style="padding: 30px 25px; background-color: #FAFCFF; text-align: center;">
+        <h1 style="color: #27304A; margin: 0; font-size: 24px; font-weight: bold;">
+          تأكيد الحساب
+        </h1>
+      </div>
+  
+      <div style="padding: 35px 25px; text-align: center;">
+        <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+          مرحباً ${account.userName}،<br>
+          رمز التأكيد الخاص بك هو:
+        </p>
+        <div style="background: #e8f0fe; padding: 20px; 
+                  margin: 0 auto; border-radius: 6px; 
+                  text-align: center; font-size: 28px;
+                  color: #2a3b66; font-weight: bold;
+                  letter-spacing: 2px; max-width: 300px;">
+          ${otp}
+        </div>
+      </div>
+  
+      <div style="background-color: #00D478; padding: 18px 25px; text-align: center;">
+        <div style="color: #ffffff; font-size: 14px; margin: 0; display: flex; justify-content: center; gap: 8px;">
+          <span>تطبيق سلامتي</span>
+          <span style="opacity: 0.7;">|</span>
+          <span>نظام التأكيد الآلي</span>
+        </div>
+      </div>
+    </div>
+  </div>`,
     };
 
     try {

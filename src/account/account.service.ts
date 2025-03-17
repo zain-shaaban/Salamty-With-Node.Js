@@ -98,7 +98,7 @@ export class AccountService {
     oneUser.location = location;
     oneUser.notificationSent = false;
     oneUser.offline = false;
-    // oneUser.location.time = oneUser.location.time * 1000;
+   // oneUser.location.time = oneUser.location.time * 1000;
     this.socketsGateway.sendNewLocation(groupID, userID, location);
     return null;
   }
