@@ -35,7 +35,7 @@ export class GroupService {
       members.push(user.userID);
       await group.update({ members });
     }
-    return { userName: user.userName,userID:user.userID };
+    return { userName: user.userName, userID: user.userID };
   }
 
   async leaveGroup(leaveGroupDto: LeaveGroupDto, userID: number) {
@@ -49,6 +49,10 @@ export class GroupService {
       group.members = users;
       await group.save();
     }
+    const account = await this.accountModel.findByPk(userID);
+    let locations = account.lastLocation;
+    locations = locations.filter((location) => location.groupID != groupID);
+    await account.update({ lastLocation: locations });
     return null;
   }
 

@@ -71,7 +71,7 @@ export class SocketsGateway
                   userID: user.userID,
                   groupID: group.groupID,
                   title: 'سلامتي - إشعار تفقد',
-                  content: `لم يرسل ${user.userName} موقعة ل ${group.groupName} منذ 30 دقيقة`,
+                  content: `لم يرسل ${user.userName} موقعه ل ${group.groupName} منذ 30 دقيقة`,
                 });
                 return user;
               } else {
