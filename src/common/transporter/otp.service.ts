@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import * as nodemailer from 'nodemailer';
 import { Account } from 'src/account/entities/account.entity';
@@ -17,9 +13,6 @@ export class OTPService {
   ) {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,
@@ -100,7 +93,6 @@ export class OTPService {
       await account.update({ otp: null, otpExpiry: null });
       return true;
     }
-
     return false;
   }
 }

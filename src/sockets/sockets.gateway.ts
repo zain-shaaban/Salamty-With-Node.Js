@@ -68,10 +68,10 @@ export class SocketsGateway
               ) {
                 user.notificationSent = true;
                 this.notificationService.send({
-                  userID:user.userID,
+                  userID: user.userID,
                   groupID: group.groupID,
                   title: 'سلامتي - إشعار تفقد',
-                  content: `لم يرسل ${user.userName} موقعه منذ 30 دقيقة`,
+                  content: `لم يرسل ${user.userName} موقعة ل ${group.groupName} منذ 30 دقيقة`,
                 });
                 return user;
               } else {
@@ -95,7 +95,7 @@ export class SocketsGateway
         client.disconnect();
       let myGroup = allGroups.find((group) => group.groupID == groupID);
       if (!myGroup) {
-        myGroup = { groupID, members: [] };
+        myGroup = { groupID, groupName: group.groupName, members: [] };
         const members = await this.accountModel.findAll({
           where: { userID: { [Op.in]: group.members } },
           attributes: ['userID', 'userName', 'lastLocation'],
