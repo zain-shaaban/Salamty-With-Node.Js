@@ -53,4 +53,14 @@ export class Account extends Model {
 
   @Column({ type: DataType.BIGINT })
   otpExpiry: number;
+
+  @Column({ type: DataType.BOOLEAN, defaultValue: false })
+  sos: boolean;
+
+  @Column({
+    type: DataType.JSONB,
+    allowNull: true,
+    defaultValue: [],
+  })
+  path: any;
 }

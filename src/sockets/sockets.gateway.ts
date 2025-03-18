@@ -6,6 +6,8 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  SubscribeMessage,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { Op } from 'sequelize';
 import { Server, Socket } from 'socket.io';
@@ -59,6 +61,8 @@ export class SocketsGateway
                 ];
                 await account.update({
                   lastLocation: locationsArray,
+                  sos: user.sos,
+                  path: user.path,
                 });
                 return user;
               } else if (
@@ -98,7 +102,7 @@ export class SocketsGateway
         myGroup = { groupID, groupName: group.groupName, members: [] };
         const members = await this.accountModel.findAll({
           where: { userID: { [Op.in]: group.members } },
-          attributes: ['userID', 'userName', 'lastLocation'],
+          attributes: ['userID', 'userName', 'lastLocation', 'sos', 'path'],
         });
         members.map((user) => {
           if (user.userID != userID) {
@@ -113,8 +117,11 @@ export class SocketsGateway
                 location: lastLocation,
                 notificationSent: true,
                 offline: true,
+                sos: user.sos,
+                path: user.path,
               });
           } else {
+            if (user.sos) user.path.push(location);
             myGroup.members.push({
               userID,
               socketID,
@@ -122,6 +129,8 @@ export class SocketsGateway
               location,
               notificationSent: false,
               offline: false,
+              sos: user.sos,
+              path: user.path,
             });
           }
         });
@@ -129,6 +138,7 @@ export class SocketsGateway
       } else {
         const user = myGroup.members.find((user) => user.userID == userID);
         if (user) {
+          if (user.sos) user.path.push(location);
           user.socketID = socketID;
           user.location = location;
           user.notificationSent = false;
@@ -141,6 +151,8 @@ export class SocketsGateway
             location,
             notificationSent: false,
             offline: false,
+            sos: false,
+            path: [],
           });
         }
       }
@@ -149,13 +161,19 @@ export class SocketsGateway
         (group) => group.groupID == groupID,
       )?.members;
       allGroupMembers = allGroupMembers.map((user) => {
-        let myUser = { userID: user.userID, location: user.location };
+        let myUser = {
+          userID: user.userID,
+          location: user.location,
+          sos: user.sos,
+          path: user.path,
+        };
         return myUser;
       });
       client.emit('onConnection', {
         groupMembers: allGroupMembers.filter((user) => user.userID != userID),
       });
-      this.sendNewLocation(groupID, userID, location);
+      let user = myGroup.members.find((user) => user.userID == userID);
+      this.sendNewLocation(groupID, userID, location, user.sos);
       return { status: true };
     } catch (error) {
       this.logger.error(error.message, error.stack);
@@ -187,6 +205,34 @@ export class SocketsGateway
     }
   }
 
+  @SubscribeMessage('sos')
+  async sosMode(@ConnectedSocket() client: Socket) {
+    const { userID, userName, groupID } = this.getDetails(client);
+    this.notificationService.send({
+      userID,
+      groupID,
+      title: 'سلامتي - إشعار خطر',
+      content: `${userName} في وضع الخطر`,
+    });
+    let myGroup = allGroups.find((group) => group.groupID == groupID);
+    let myUser = myGroup.members.find((user) => user.userID == userID);
+    myUser.sos = true;
+  }
+
+  @SubscribeMessage('endsos')
+  async endsosMode(@ConnectedSocket() client: Socket) {
+    const { userID, userName, groupID } = this.getDetails(client);
+    this.notificationService.send({
+      userID,
+      groupID,
+      title: 'سلامتي - إشعار أمان',
+      content: `${userName} عاد الى وضع الأمان`,
+    });
+    let myGroup = allGroups.find((group) => group.groupID == groupID);
+    let myUser = myGroup.members.find((user) => user.userID == userID);
+    myUser.sos = false;
+    myUser.path = [];
+  }
   getDetails(client: Socket) {
     const token: any = client.handshake.query.authToken;
     const groupID: any = client.handshake.query.groupID;
@@ -201,11 +247,16 @@ export class SocketsGateway
     };
   }
 
-  sendNewLocation(groupID: string, userID: number, location: object) {
+  sendNewLocation(
+    groupID: string,
+    userID: number,
+    location: object,
+    sos: boolean,
+  ) {
     let myGroup = allGroups.find((group) => group.groupID == groupID);
     myGroup.members.map((user) => {
       if (user.userID != userID && user.socketID != null) {
-        this.io.to(user.socketID).emit('location', { userID, location });
+        this.io.to(user.socketID).emit('location', { userID, location, sos });
       }
     });
   }

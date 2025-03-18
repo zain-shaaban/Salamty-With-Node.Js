@@ -95,11 +95,12 @@ export class AccountService {
     if (!group) throw new NotFoundException();
     const oneUser = group.members.find((user) => user.userID == userID);
     if (!oneUser) throw new NotFoundException();
+    if (oneUser.sos) oneUser.path.push(location);
     oneUser.location = location;
     oneUser.notificationSent = false;
     oneUser.offline = false;
-    //oneUser.location.time = oneUser.location.time * 1000;
-    this.socketsGateway.sendNewLocation(groupID, userID, location);
+   // oneUser.location.time = oneUser.location.time * 1000;
+    this.socketsGateway.sendNewLocation(groupID, userID, location, oneUser.sos);
     return null;
   }
 
