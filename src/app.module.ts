@@ -21,12 +21,12 @@ import { FirebaseModule } from './firebase/firebase.module';
         username: configService.get('database.user'),
         database: configService.get('database.name'),
         password: configService.get('database.password'),
-        // dialectOptions: {
-        //   ssl: {
-        //     require: true,
-        //     rejectUnauthorized: false,
-        //   },
-        // },
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
+        },
         autoLoadModels: true,
         retryAttempts: 2,
         synchronize: true,
