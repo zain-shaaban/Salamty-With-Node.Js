@@ -59,11 +59,18 @@ export class SocketsGateway
                   ...locationsArray,
                   { groupID: group.groupID, location: user.location },
                 ];
-                await account.update({
-                  lastLocation: locationsArray,
-                  sos: user.sos,
-                  path: user.path,
-                });
+                if (user.sos)
+                  await account.update({
+                    lastLocation: locationsArray,
+                    sos: user.sos,
+                    path: { groupID: group.groupID, path: user.path },
+                  });
+                else {
+                  await account.update({
+                    lastLocation: locationsArray,
+                    sos: user.sos,
+                  });
+                }
                 return user;
               } else if (
                 Date.now() - user.location.time > 1000 * 30 &&
@@ -110,28 +117,53 @@ export class SocketsGateway
               (lastLocation) => lastLocation.groupID == groupID,
             )?.location;
             if (lastLocation)
-              myGroup.members.push({
-                userID: user.userID,
-                socketID: null,
-                userName: user.userName,
-                location: lastLocation,
-                notificationSent: true,
-                offline: true,
-                sos: user.sos,
-                path: user.path,
-              });
+              if (user.sos && user.path?.groupID == groupID)
+                myGroup.members.push({
+                  userID: user.userID,
+                  socketID: null,
+                  userName: user.userName,
+                  location: lastLocation,
+                  notificationSent: true,
+                  offline: true,
+                  sos: user.sos,
+                  path: user.path.path,
+                });
+              else
+                myGroup.members.push({
+                  userID: user.userID,
+                  socketID: null,
+                  userName: user.userName,
+                  location: lastLocation,
+                  notificationSent: true,
+                  offline: true,
+                  sos: false,
+                  path: [],
+                });
           } else {
-            if (user.sos) user.path.push(location);
-            myGroup.members.push({
-              userID,
-              socketID,
-              userName,
-              location,
-              notificationSent: false,
-              offline: false,
-              sos: user.sos,
-              path: user.path,
-            });
+            if (user.sos) {
+              user.path.push(location);
+              myGroup.members.push({
+                userID,
+                socketID,
+                userName,
+                location,
+                notificationSent: false,
+                offline: false,
+                sos: user.sos,
+                path: user.path.path,
+              });
+            } else {
+              myGroup.members.push({
+                userID,
+                socketID,
+                userName,
+                location,
+                notificationSent: false,
+                offline: false,
+                sos: user.sos,
+                path: [],
+              });
+            }
           }
         });
         allGroups.push(myGroup);
@@ -231,7 +263,6 @@ export class SocketsGateway
     let myGroup = allGroups.find((group) => group.groupID == groupID);
     let myUser = myGroup.members.find((user) => user.userID == userID);
     myUser.sos = false;
-    myUser.path = [];
   }
   getDetails(client: Socket) {
     const token: any = client.handshake.query.authToken;

@@ -60,7 +60,7 @@ export class Account extends Model {
   @Column({
     type: DataType.JSONB,
     allowNull: true,
-    defaultValue: [],
+    defaultValue: {},
   })
   path: any;
 }
