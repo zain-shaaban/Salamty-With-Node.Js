@@ -9,7 +9,7 @@ import {
   Unique,
 } from 'sequelize-typescript';
 
-@Table({ tableName: 'groups', timestamps: false })
+@Table({ tableName: 'salamty_groups', timestamps: false })
 export class Group extends Model {
   @PrimaryKey
   @AutoIncrement

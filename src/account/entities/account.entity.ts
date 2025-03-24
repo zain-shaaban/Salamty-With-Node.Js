@@ -10,7 +10,7 @@ import {
   Validate,
 } from 'sequelize-typescript';
 
-@Table({ tableName: 'accounts', timestamps: false })
+@Table({ tableName: 'salamty_accounts', timestamps: false })
 export class Account extends Model {
   @PrimaryKey
   @AutoIncrement

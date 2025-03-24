@@ -9,7 +9,7 @@ import {
   Sequelize,
 } from 'sequelize-typescript';
 
-@Table({ tableName: 'error_logs', timestamps: false })
+@Table({ tableName: 'salamty_error_logs', timestamps: false })
 export class ErrorLogger extends Model {
   @PrimaryKey
   @AutoIncrement
