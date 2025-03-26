@@ -1,31 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { CreateNotificationDto } from './dto/create-notification.dto';
-import { InjectModel } from '@nestjs/sequelize';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { Account } from 'src/account/entities/account.entity';
 import { Group } from 'src/group/entities/group.entity';
-import { Op } from 'sequelize';
 import { logger } from 'src/common/error_logger/logger.util';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class NotificationService {
   constructor(
-    @InjectModel(Account) private readonly accountModel: typeof Account,
-    @InjectModel(Group) private readonly groupModel: typeof Group,
+    @InjectRepository(Account) private accountRepository: Repository<Account>,
+    @InjectRepository(Group) private groupRepository: Repository<Group>,
     private readonly firebaseService: FirebaseService,
   ) {}
 
   async send(createNotificationDto: CreateNotificationDto) {
     try {
       const { userID, groupID, title, content } = createNotificationDto;
-      let group = await this.groupModel.findByPk(groupID);
-      const accounts = await this.accountModel.findAll({
+      let group = await this.groupRepository.findOneBy({groupID});
+      const accounts = await this.accountRepository.find({
         where: {
-          userID: {
-            [Op.in]: group.members.filter((user) => user != userID),
-          },
+          userID:In(group.members.filter((user) => user != userID)),
         },
-        attributes: ['notificationToken'],
+        select: ['notificationToken'],
       });
       await Promise.all(
         accounts.map(async (account) => {

@@ -1,13 +1,13 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateNotificationDto {
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  userID: number;
+  userID: string;
 
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  groupID: number;
+  groupID: string;
 
   @IsString()
   @IsNotEmpty()

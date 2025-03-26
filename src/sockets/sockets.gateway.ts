@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/sequelize';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -9,13 +9,13 @@ import {
   SubscribeMessage,
   ConnectedSocket,
 } from '@nestjs/websockets';
-import { Op } from 'sequelize';
 import { Server, Socket } from 'socket.io';
 import { Account } from 'src/account/entities/account.entity';
 
 import { ErrorLoggerService } from 'src/common/error_logger/error_logger.service';
 import { Group } from 'src/group/entities/group.entity';
 import { NotificationService } from 'src/notification/notification.service';
+import { In, Repository } from 'typeorm';
 
 export let allGroups: any = [];
 
@@ -35,8 +35,8 @@ export class SocketsGateway
 
   constructor(
     private readonly logger: ErrorLoggerService,
-    @InjectModel(Account) private readonly accountModel: typeof Account,
-    @InjectModel(Group) private readonly groupModel: typeof Group,
+    @InjectRepository(Account) private accountRepository: Repository<Account>,
+    @InjectRepository(Group) private groupRepository: Repository<Group>,
     @Inject() private readonly notificationService: NotificationService,
     private readonly jwtService: JwtService,
   ) {
@@ -51,7 +51,9 @@ export class SocketsGateway
                 user.offline == false
               ) {
                 user.offline = true;
-                let account = await this.accountModel.findByPk(user.userID);
+                let account = await this.accountRepository.findOneBy({
+                  userID: user.userID,
+                });
                 let locationsArray = account.lastLocation.filter(
                   (oneGroup) => oneGroup.groupID != group.groupID,
                 );
@@ -59,17 +61,15 @@ export class SocketsGateway
                   ...locationsArray,
                   { groupID: group.groupID, location: user.location },
                 ];
-                if (user.sos)
-                  await account.update({
-                    lastLocation: locationsArray,
-                    sos: user.sos,
-                    path: { groupID: group.groupID, path: user.path },
-                  });
-                else {
-                  await account.update({
-                    lastLocation: locationsArray,
-                    sos: user.sos,
-                  });
+                if (user.sos) {
+                  account.lastLocation = locationsArray;
+                  account.sos = user.sos;
+                  account.path = { groupID: group.groupID, path: user.path };
+                  await this.accountRepository.save(account);
+                } else {
+                  account.lastLocation = locationsArray;
+                  account.sos = user.sos;
+                  await this.accountRepository.save(account);
                 }
                 return user;
               } else if (
@@ -101,15 +101,15 @@ export class SocketsGateway
     try {
       const { userID, socketID, userName, location, groupID } =
         this.getDetails(client);
-      const group = await this.groupModel.findByPk(groupID);
+      const group = await this.groupRepository.findOneBy({ groupID });
       if (!group || !group.members.find((id) => id == userID))
         client.disconnect();
       let myGroup = allGroups.find((group) => group.groupID == groupID);
       if (!myGroup) {
         myGroup = { groupID, groupName: group.groupName, members: [] };
-        const members = await this.accountModel.findAll({
-          where: { userID: { [Op.in]: group.members } },
-          attributes: ['userID', 'userName', 'lastLocation', 'sos', 'path'],
+        const members = await this.accountRepository.find({
+          where: { userID: In(group.members) },
+          select: ['userID', 'userName', 'lastLocation', 'sos', 'path'],
         });
         members.map((user) => {
           if (user.userID != userID) {
@@ -270,7 +270,7 @@ export class SocketsGateway
     const location: any = client.handshake.query.location;
     const { userID, userName } = this.jwtService.verify(token);
     return {
-      userID: Number(userID),
+      userID: userID,
       userName,
       groupID,
       socketID: client.id,

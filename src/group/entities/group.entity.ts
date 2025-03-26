@@ -1,29 +1,13 @@
-import {
-  Column,
-  DataType,
-  Table,
-  Model,
-  AllowNull,
-  PrimaryKey,
-  AutoIncrement,
-  Unique,
-} from 'sequelize-typescript';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Table({ tableName: 'salamty_groups', timestamps: false })
-export class Group extends Model {
-  @PrimaryKey
-  @AutoIncrement
-  @Unique
-  @Column(DataType.INTEGER)
-  groupID: number;
+@Entity('salamty_groups')
+export class Group {
+  @PrimaryGeneratedColumn('uuid')
+  groupID: string;
 
-  @AllowNull(false)
-  @Column(DataType.STRING)
+  @Column()
   groupName: string;
 
-  @Column({
-    type: DataType.JSONB,
-    allowNull: false,
-  })
+  @Column('text', { array: true })
   members: any;
 }

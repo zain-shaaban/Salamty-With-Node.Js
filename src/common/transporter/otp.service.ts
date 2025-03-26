@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+
 import * as nodemailer from 'nodemailer';
 import { Account } from 'src/account/entities/account.entity';
 import { logger } from '../error_logger/logger.util';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class OTPService {
   private transporter: nodemailer.Transporter;
 
   constructor(
-    @InjectModel(Account) private readonly accountModel: typeof Account,
+    @InjectRepository(Account) private accountRepository: Repository<Account>,
   ) {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -32,9 +34,10 @@ export class OTPService {
   async sendOTP(email: string): Promise<void> {
     const otp = this.generateOTP();
     const otpExpiry = Date.now() + 1000 * 60 * 30;
-    const account = await this.accountModel.findOne({ where: { email } });
+    const account = await this.accountRepository.findOne({ where: { email } });
     if (!account) return;
-
+    account.otp = otp;
+    account.otpExpiry = otpExpiry;
     const mailOptions = {
       from: '"salamty" <salamty@gmail.com>',
       to: email,
@@ -76,7 +79,7 @@ export class OTPService {
     try {
       await Promise.all([
         this.transporter.sendMail(mailOptions),
-        account.update({ otp, otpExpiry }),
+       this.accountRepository.save(account),
       ]);
     } catch (error) {
       logger.error(error.message, error.stack);
@@ -85,12 +88,12 @@ export class OTPService {
   }
 
   async verifyOTP(email: string, sendOTP: string) {
-    const account = await this.accountModel.findOne({ where: { email } });
+    const account = await this.accountRepository.findOne({ where: { email } });
     if (!account?.otp) {
       return false;
     }
     if (sendOTP == account.otp && Date.now() < account.otpExpiry) {
-      await account.update({ otp: null, otpExpiry: null });
+      await this.accountRepository.update(account.userID,{ otp: null, otpExpiry: null });
       return true;
     }
     return false;

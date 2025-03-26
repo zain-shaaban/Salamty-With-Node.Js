@@ -1,28 +1,21 @@
 import {
-  Model,
-  AutoIncrement,
   Column,
-  DataType,
-  PrimaryKey,
-  Table,
-  Unique,
-  Sequelize,
-} from 'sequelize-typescript';
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
-@Table({ tableName: 'salamty_error_logs', timestamps: false })
-export class ErrorLogger extends Model {
-  @PrimaryKey
-  @AutoIncrement
-  @Unique
-  @Column(DataType.INTEGER)
-  errorID: number;
+@Entity('salamty_error_logs')
+export class ErrorLogger {
+  @PrimaryGeneratedColumn('uuid')
+  errorID: string;
 
-  @Column({ type: DataType.STRING, allowNull: false })
+  @Column({ type: 'varchar' })
   message: string;
 
-  @Column({ type: DataType.TEXT })
+  @Column({ type: 'text', nullable: true })
   stack: string;
 
-  @Column({ defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') })
+  @CreateDateColumn()
   timestamp: Date;
 }

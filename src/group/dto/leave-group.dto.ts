@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsString,  } from 'class-validator';
 
 export class LeaveGroupDto {
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  groupID: number;
+  groupID: string;
 }

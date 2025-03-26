@@ -1,66 +1,48 @@
-import {
-  Column,
-  DataType,
-  Table,
-  Model,
-  AllowNull,
-  PrimaryKey,
-  AutoIncrement,
-  Unique,
-  Validate,
-} from 'sequelize-typescript';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Table({ tableName: 'salamty_accounts', timestamps: false })
-export class Account extends Model {
-  @PrimaryKey
-  @AutoIncrement
-  @Unique
-  @Column(DataType.INTEGER)
-  userID: number;
+@Entity('salamty_accounts')
+export class Account {
+  @PrimaryGeneratedColumn('uuid')
+  userID: string;
 
-  @AllowNull(false)
-  @Column(DataType.STRING)
+  @Column()
   userName: string;
 
-  @Validate({ isEmail: true })
-  @Unique
-  @AllowNull(false)
-  @Column(DataType.STRING)
+  @Column({ type: 'varchar', unique: true })
   email: string;
 
-  @AllowNull(false)
-  @Column(DataType.STRING)
+  @Column()
   password: string;
 
-  @Column(DataType.STRING)
+  @Column({ type: 'varchar', nullable: true })
   secretKey: string;
 
-  @Column({ type: DataType.BOOLEAN, defaultValue: false })
+  @Column({ type: 'boolean', default: false })
   confirmed: boolean;
 
   @Column({
-    type: DataType.JSONB,
-    allowNull: true,
-    defaultValue: [],
+    type: 'jsonb',
+    nullable: true,
+    default: [],
   })
   lastLocation: any;
 
-  @Column(DataType.STRING)
+  @Column({ type: 'varchar', nullable: true })
   notificationToken: string;
 
-  @Column({ type: DataType.STRING })
+  @Column({ type: 'varchar', nullable: true })
   otp: string;
 
-  @Column({ type: DataType.BIGINT })
+  @Column({ type: 'bigint', nullable: true })
   otpExpiry: number;
 
-  @Column({ type: DataType.BOOLEAN, defaultValue: false })
+  @Column({ type: 'boolean', default: false })
   sos: boolean;
 
   @Column({
-    type: DataType.JSONB,
-    allowNull: true,
-    defaultValue: {},
+    type: 'jsonb',
+    nullable: true,
+    default: {},
   })
   path: any;
 }
