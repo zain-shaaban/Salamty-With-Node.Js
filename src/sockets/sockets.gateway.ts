@@ -193,7 +193,7 @@ export class SocketsGateway
                 });
           } else {
             if (user.sos) {
-              user.path.push(location);
+              user.path.path.push(location);
               myGroup.members.push({
                 userID,
                 socketID,
@@ -270,8 +270,7 @@ export class SocketsGateway
       let user = myGroup.members.find((user) => user.userID == userID);
       client.emit('onConnection', {
         groupMembers: allGroupMembers.filter((user) => user.userID != userID),
-        sos: user.sos,
-        destination: user.destination,
+        session: { sos: user.sos, destination: user.destination },
       });
       this.sendNewLocation(groupID, userID, location, user.sos);
       return { status: true };
@@ -388,7 +387,6 @@ export class SocketsGateway
       let myUser = myGroup.members.find((user) => user.userID == userID);
       if (Object.keys(myUser.destination).length == 0)
         throw new Error('the trip does not exist');
-      console.log(myUser.destination.estimatedTime);
       if (changeTimeData.increate == true)
         myUser.destination.estimatedTime =
           myUser.destination.estimatedTime + changeTimeData.amount;
