@@ -1,4 +1,4 @@
-import { Inject } from '@nestjs/common';
+import { Inject, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -8,6 +8,7 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   ConnectedSocket,
+  MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Account } from 'src/account/entities/account.entity';
@@ -46,6 +47,30 @@ export class SocketsGateway
           group.members = await Promise.all(
             group.members.map(async (user) => {
               if (
+                user.destination?.estimatedTime < Date.now() - 1000 * 60 * 5 &&
+                user.notificationDes == false
+              ) {
+                user.notificationDes = true;
+                this.notificationService.sendToUser({
+                  userID: user.userID,
+                  title: 'سلامتي - إشعار تفقد',
+                  groupID: null,
+                  content: `بقي 5 دقائق على نهاية رحلتك, هل تريد تعديل المدة؟`,
+                });
+              }
+              if (
+                user.destination?.estimatedTime < Date.now() &&
+                user.sos == false
+              ) {
+                user.sos = true;
+                this.notificationService.sendToGroups({
+                  userID: user.userID,
+                  groupID: group.groupID,
+                  title: 'سلامتي - إشعار خطر',
+                  content: `${user.userName} في وضع الخطر`,
+                });
+              }
+              if (
                 Date.now() - user.location.time > 1000 * 60 &&
                 user.socketID == null &&
                 user.offline == false
@@ -65,10 +90,20 @@ export class SocketsGateway
                   account.lastLocation = locationsArray;
                   account.sos = user.sos;
                   account.path = { groupID: group.groupID, path: user.path };
+                  if (Object.keys(user.destination).length > 0)
+                    account.destination = {
+                      groupID: group.groupID,
+                      destination: user.destination,
+                    };
                   await this.accountRepository.save(account);
                 } else {
                   account.lastLocation = locationsArray;
                   account.sos = user.sos;
+                  if (Object.keys(user.destination).length > 0)
+                    account.destination = {
+                      groupID: group.groupID,
+                      destination: user.destination,
+                    };
                   await this.accountRepository.save(account);
                 }
                 return user;
@@ -78,7 +113,7 @@ export class SocketsGateway
                 user.notificationSent == false
               ) {
                 user.notificationSent = true;
-                this.notificationService.send({
+                this.notificationService.sendToGroups({
                   userID: user.userID,
                   groupID: group.groupID,
                   title: 'سلامتي - إشعار تفقد',
@@ -109,7 +144,14 @@ export class SocketsGateway
         myGroup = { groupID, groupName: group.groupName, members: [] };
         const members = await this.accountRepository.find({
           where: { userID: In(group.members) },
-          select: ['userID', 'userName', 'lastLocation', 'sos', 'path'],
+          select: [
+            'userID',
+            'userName',
+            'lastLocation',
+            'sos',
+            'destination',
+            'path',
+          ],
         });
         members.map((user) => {
           if (user.userID != userID) {
@@ -127,6 +169,11 @@ export class SocketsGateway
                   offline: true,
                   sos: user.sos,
                   path: user.path.path,
+                  destination:
+                    user.destination?.groupID == groupID
+                      ? user.destination.destination
+                      : {},
+                  notificationDes: false,
                 });
               else
                 myGroup.members.push({
@@ -138,6 +185,11 @@ export class SocketsGateway
                   offline: true,
                   sos: false,
                   path: [],
+                  destination:
+                    user.destination?.groupID == groupID
+                      ? user.destination.destination
+                      : {},
+                  notificationDes: false,
                 });
           } else {
             if (user.sos) {
@@ -151,6 +203,11 @@ export class SocketsGateway
                 offline: false,
                 sos: user.sos,
                 path: user.path.path,
+                destination:
+                  user.destination?.groupID == groupID
+                    ? user.destination.destination
+                    : {},
+                notificationDes: false,
               });
             } else {
               myGroup.members.push({
@@ -162,6 +219,11 @@ export class SocketsGateway
                 offline: false,
                 sos: user.sos,
                 path: [],
+                destination:
+                  user.destination?.groupID == groupID
+                    ? user.destination.destination
+                    : {},
+                notificationDes: false,
               });
             }
           }
@@ -174,6 +236,7 @@ export class SocketsGateway
           user.socketID = socketID;
           user.location = location;
           user.notificationSent = false;
+          user.notificationDes = false;
           user.offline = false;
         } else {
           myGroup.members.push({
@@ -185,6 +248,8 @@ export class SocketsGateway
             offline: false,
             sos: false,
             path: [],
+            destination: {},
+            notificationDes: false,
           });
         }
       }
@@ -198,13 +263,16 @@ export class SocketsGateway
           location: user.location,
           sos: user.sos,
           path: user.path,
+          destination: user.destination,
         };
         return myUser;
       });
+      let user = myGroup.members.find((user) => user.userID == userID);
       client.emit('onConnection', {
         groupMembers: allGroupMembers.filter((user) => user.userID != userID),
+        sos: user.sos,
+        destination: user.destination,
       });
-      let user = myGroup.members.find((user) => user.userID == userID);
       this.sendNewLocation(groupID, userID, location, user.sos);
       return { status: true };
     } catch (error) {
@@ -239,31 +307,131 @@ export class SocketsGateway
 
   @SubscribeMessage('sos')
   async sosMode(@ConnectedSocket() client: Socket) {
-    const { userID, userName, groupID } = this.getDetails(client);
-    this.notificationService.send({
-      userID,
-      groupID,
-      title: 'سلامتي - إشعار خطر',
-      content: `${userName} في وضع الخطر`,
-    });
-    let myGroup = allGroups.find((group) => group.groupID == groupID);
-    let myUser = myGroup.members.find((user) => user.userID == userID);
-    myUser.sos = true;
+    try {
+      const { userID, userName, groupID } = this.getDetails(client);
+      this.notificationService.sendToGroups({
+        userID,
+        groupID,
+        title: 'سلامتي - إشعار خطر',
+        content: `${userName} في وضع الخطر`,
+      });
+      let myGroup = allGroups.find((group) => group.groupID == groupID);
+      let myUser = myGroup.members.find((user) => user.userID == userID);
+      myUser.sos = true;
+    } catch (error) {
+      this.logger.error(error.message, error.stack);
+      return {
+        status: false,
+        message: error.message,
+      };
+    }
   }
 
   @SubscribeMessage('endsos')
   async endsosMode(@ConnectedSocket() client: Socket) {
-    const { userID, userName, groupID } = this.getDetails(client);
-    this.notificationService.send({
-      userID,
-      groupID,
-      title: 'سلامتي - إشعار أمان',
-      content: `${userName} عاد الى وضع الأمان`,
-    });
-    let myGroup = allGroups.find((group) => group.groupID == groupID);
-    let myUser = myGroup.members.find((user) => user.userID == userID);
-    myUser.sos = false;
+    try {
+      const { userID, userName, groupID } = this.getDetails(client);
+      this.notificationService.sendToGroups({
+        userID,
+        groupID,
+        title: 'سلامتي - إشعار أمان',
+        content: `${userName} عاد الى وضع الأمان`,
+      });
+      let myGroup = allGroups.find((group) => group.groupID == groupID);
+      let myUser = myGroup.members.find((user) => user.userID == userID);
+      myUser.sos = false;
+    } catch (error) {
+      this.logger.error(error.message, error.stack);
+      return {
+        status: false,
+        message: error.message,
+      };
+    }
   }
+
+  @SubscribeMessage('newTrip')
+  submitNewTrip(
+    @ConnectedSocket() client: Socket,
+    @MessageBody()
+    destination: {
+      coords: { lat: number; lng: number };
+      estimatedTime: number;
+    },
+  ) {
+    try {
+      const { userID, groupID } = this.getDetails(client);
+      let myGroup = allGroups.find((group) => group.groupID == groupID);
+      let myUser = myGroup.members.find((user) => user.userID == userID);
+      myUser.destination = destination;
+      client.broadcast.to(groupID).emit('newTrip', { userID, destination });
+      return {
+        status: true,
+        data: true,
+      };
+    } catch (error) {
+      this.logger.error(error.message, error.stack);
+      return {
+        status: false,
+        message: error.message,
+      };
+    }
+  }
+
+  @SubscribeMessage('changeTime')
+  changeTimeForTrip(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() changeTimeData: { increate: boolean; amount: number },
+  ) {
+    try {
+      const { userID, groupID } = this.getDetails(client);
+      let myGroup = allGroups.find((group) => group.groupID == groupID);
+      let myUser = myGroup.members.find((user) => user.userID == userID);
+      if (Object.keys(myUser.destination).length == 0)
+        throw new Error('the trip does not exist');
+      console.log(myUser.destination.estimatedTime);
+      if (changeTimeData.increate == true)
+        myUser.destination.estimatedTime =
+          myUser.destination.estimatedTime + changeTimeData.amount;
+      else
+        myUser.destination.estimatedTime =
+          myUser.destination.estimatedTime - changeTimeData.amount;
+      return {
+        status: true,
+        data: null,
+      };
+    } catch (error) {
+      this.logger.error(error.message, error.stach);
+      return {
+        status: false,
+        message: error.message,
+      };
+    }
+  }
+
+  @SubscribeMessage('endTrip')
+  endTrip(@ConnectedSocket() client: Socket) {
+    try {
+      const { userID, groupID } = this.getDetails(client);
+      let myGroup = allGroups.find((group) => group.groupID == groupID);
+      let myUser = myGroup.members.find((user) => user.userID == userID);
+      if (Object.keys(myUser.destination).length == 0)
+        throw new Error('the trip does not exist');
+      myUser.destination = {};
+      client.broadcast.to(groupID).emit('endTrip', { userID });
+      this.accountRepository.update(userID, { destination: {} });
+      return {
+        status: true,
+        data: null,
+      };
+    } catch (error) {
+      this.logger.error(error.message, error.stack);
+      return {
+        status: false,
+        message: error.message,
+      };
+    }
+  }
+
   getDetails(client: Socket) {
     const token: any = client.handshake.query.authToken;
     const groupID: any = client.handshake.query.groupID;
@@ -280,7 +448,7 @@ export class SocketsGateway
 
   sendNewLocation(
     groupID: string,
-    userID: number,
+    userID: string,
     location: object,
     sos: boolean,
   ) {

@@ -18,6 +18,7 @@ import { allGroups, SocketsGateway } from 'src/sockets/sockets.gateway';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 @Injectable()
 export class AccountService {
   constructor(
@@ -87,7 +88,7 @@ export class AccountService {
     return null;
   }
 
-  async sendNewLocation(sendLocationDto: SendLocationDto, userID: number) {
+  async sendNewLocation(sendLocationDto: SendLocationDto, userID: string) {
     const { groupID, location } = sendLocationDto;
     const group = allGroups.find((group) => group.groupID == groupID);
     if (!group) throw new NotFoundException();
@@ -97,7 +98,7 @@ export class AccountService {
     oneUser.location = location;
     oneUser.notificationSent = false;
     oneUser.offline = false;
-    // oneUser.location.time = oneUser.location.time * 1000;
+    oneUser.location.time = oneUser.location.time * 1000;
     this.socketsGateway.sendNewLocation(groupID, userID, location, oneUser.sos);
     return null;
   }

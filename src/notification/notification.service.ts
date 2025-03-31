@@ -15,13 +15,13 @@ export class NotificationService {
     private readonly firebaseService: FirebaseService,
   ) {}
 
-  async send(createNotificationDto: CreateNotificationDto) {
+  async sendToGroups(createNotificationDto: CreateNotificationDto) {
     try {
       const { userID, groupID, title, content } = createNotificationDto;
-      let group = await this.groupRepository.findOneBy({groupID});
+      let group = await this.groupRepository.findOneBy({ groupID });
       const accounts = await this.accountRepository.find({
         where: {
-          userID:In(group.members.filter((user) => user != userID)),
+          userID: In(group.members.filter((user) => user != userID)),
         },
         select: ['notificationToken'],
       });
@@ -37,6 +37,33 @@ export class NotificationService {
           await this.firebaseService.messaging().send(message);
         }),
       );
+      return null;
+    } catch (error) {
+      logger.error(error.message, error.stack);
+      return {
+        status: false,
+        message: error.message,
+      };
+    }
+  }
+
+  async sendToUser(createNotificationDto: CreateNotificationDto) {
+    try {
+      const { userID, title, content } = createNotificationDto;
+      const account = await this.accountRepository.findOne({
+        where: {
+          userID,
+        },
+        select: ['notificationToken'],
+      });
+      const message = {
+        token: account.notificationToken,
+        notification: {
+          title,
+          body: content,
+        },
+      };
+      await this.firebaseService.messaging().send(message);
       return null;
     } catch (error) {
       logger.error(error.message, error.stack);

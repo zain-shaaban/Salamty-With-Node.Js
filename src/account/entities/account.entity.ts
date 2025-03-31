@@ -45,4 +45,11 @@ export class Account {
     default: {},
   })
   path: any;
+
+  @Column({
+    type: 'jsonb',
+    nullable: true,
+    default: {},
+  })
+  destination: any;
 }
