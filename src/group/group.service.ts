@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Group } from './entities/group.entity';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { AddUserToGroupDto } from './dto/add-user-to-group.dto';
@@ -6,12 +6,14 @@ import { Account } from 'src/account/entities/account.entity';
 import { LeaveGroupDto } from './dto/leave-group.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository, ArrayContains } from 'typeorm';
+import { UpdateSocketGateway } from 'src/sockets/update-socket/update-socket.gateway';
 
 @Injectable()
 export class GroupService {
   constructor(
     @InjectRepository(Group) private groupRepository: Repository<Group>,
     @InjectRepository(Account) private accountRepository: Repository<Account>,
+    @Inject() private readonly updateGateway: UpdateSocketGateway,
   ) {}
 
   async createNewGroup(createGroupDto: CreateGroupDto, userID: string) {
@@ -31,9 +33,14 @@ export class GroupService {
     const user = await this.accountRepository.findOneBy({ secretKey });
     if (!user) throw new NotFoundException('user not found');
     if (!group.members.find((id) => id == user.userID)) {
+      this.updateGateway.newGroup(user.userID);
+      this.updateGateway.joinedGroup(
+        group.members.filter((user) => user != userID),
+      );
       group.members.push(user.userID);
       await this.groupRepository.save(group);
     }
+
     return { userName: user.userName, userID: user.userID };
   }
 
@@ -50,6 +57,7 @@ export class GroupService {
     account.lastLocation = account.lastLocation.filter(
       (location) => location.groupID != groupID,
     );
+    this.updateGateway.leftGroup(group.members);
     await this.accountRepository.save(account);
     return null;
   }

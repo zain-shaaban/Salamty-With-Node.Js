@@ -4,9 +4,10 @@ import { GroupController } from './group.controller';
 import { Group } from './entities/group.entity';
 import { Account } from 'src/account/entities/account.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UpdateSocketModule } from 'src/sockets/update-socket/update-socket.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Group, Account])],
+  imports: [TypeOrmModule.forFeature([Group, Account]), UpdateSocketModule],
   controllers: [GroupController],
   providers: [GroupService],
 })
