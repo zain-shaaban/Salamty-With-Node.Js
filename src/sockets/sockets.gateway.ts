@@ -435,8 +435,9 @@ export class SocketsGateway
     const groupID: any = client.handshake.query.groupID;
     const location: any = client.handshake.query.location;
     const { userID, userName } = this.jwtService.verify(token);
-    console.log(location);
-    console.log(typeof location);
+    this.logger.error('FROM CONSOLE LOCATION', location);
+    this.logger.error('FROM CONSOLE GROUP ID', groupID);
+    this.logger.error('FROM CONSOLE USER ID', userID);
     return {
       userID: userID,
       userName,
