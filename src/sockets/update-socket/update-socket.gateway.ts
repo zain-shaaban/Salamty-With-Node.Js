@@ -48,20 +48,20 @@ export class UpdateSocketGateway
 
   newGroup(userID: string) {
     const { socketID } = idPairs.find((user) => user.userID == userID);
-    this.io.to(socketID).emit('newGroup');
+    this.io.to(socketID).emit('groupChange');
   }
 
   joinedGroup(members: string[]) {
     idPairs.map((user) => {
       if (members.find((userID) => userID == user.userID))
-        this.io.to(user.socketID).emit('joinedGroup');
+        this.io.to(user.socketID).emit('groupChange');
     });
   }
 
   leftGroup(members: string[]) {
     idPairs.map((user) => {
       if (members.find((userID) => userID == user.userID))
-        this.io.to(user.socketID).emit('leftGroup');
+        this.io.to(user.socketID).emit('groupChange');
     });
   }
 }
