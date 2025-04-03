@@ -1,4 +1,4 @@
-import { Inject, NotFoundException } from '@nestjs/common';
+import { Inject, Logger, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -435,6 +435,8 @@ export class SocketsGateway
     const groupID: any = client.handshake.query.groupID;
     const location: any = client.handshake.query.location;
     const { userID, userName } = this.jwtService.verify(token);
+    console.log(location);
+    console.log(typeof location);
     return {
       userID: userID,
       userName,
