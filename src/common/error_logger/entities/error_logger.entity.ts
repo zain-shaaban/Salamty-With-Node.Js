@@ -7,8 +7,8 @@ import {
 
 @Entity('salamty_error_logs')
 export class ErrorLogger {
-  @PrimaryGeneratedColumn('uuid')
-  errorID: string;
+  @PrimaryGeneratedColumn()
+  errorID: number;
 
   @Column({ type: 'varchar' })
   message: string;
