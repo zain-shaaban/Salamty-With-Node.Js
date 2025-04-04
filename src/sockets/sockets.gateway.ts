@@ -339,6 +339,11 @@ export class SocketsGateway
       let myGroup = allGroups.find((group) => group.groupID == groupID);
       let myUser = myGroup.members.find((user) => user.userID == userID);
       myUser.sos = false;
+      if (Object.keys(myUser.destination).length > 0) {
+        myUser.destination = {};
+        client.broadcast.to(groupID).emit('endTrip', { userID });
+        this.accountRepository.update(userID, { destination: {} });
+      }
     } catch (error) {
       this.logger.error(error.message, error.stack);
       return {
