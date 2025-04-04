@@ -11,7 +11,7 @@ export class ErrorLoggerController {
   }
 
   @Get(':errorID')
-  async findOne(@Param('errorID') errorID: string) {
+  async findOne(@Param('errorID') errorID: number) {
     return await asyncHandler(this.errorLoggerService.findOne(errorID));
   }
 }

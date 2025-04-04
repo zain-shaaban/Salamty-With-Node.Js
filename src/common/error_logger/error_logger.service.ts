@@ -20,7 +20,7 @@ export class ErrorLoggerService implements LoggerService {
     });
   }
 
-  async findOne(errorID: string) {
+  async findOne(errorID: number) {
     return await this.errorLoggerRepository.findOne({ where: { errorID } });
   }
   log(message: string) {}
