@@ -41,99 +41,95 @@ export class SocketsGateway
     @Inject() private readonly notificationService: NotificationService,
     private readonly jwtService: JwtService,
   ) {
-    setInterval(
-      async () => {
-        allGroups = await Promise.all(
-          allGroups.map(async (group) => {
-            group.members = await Promise.all(
-              group.members.map(async (user) => {
-                if (
-                  user.destination?.estimatedTime <
-                    Date.now() + 1000 * 60 * 5 &&
-                  user.notificationDes == false
-                ) {
-                  user.notificationDes = true;
-                  this.notificationService.sendToUser({
-                    userID: user.userID,
-                    title: 'سلامتي - إشعار تفقد',
-                    groupID: null,
-                    content: `بقي 5 دقائق على نهاية رحلتك, هل تريد تعديل المدة؟`,
-                  });
-                }
-                if (
-                  user.destination?.estimatedTime < Date.now() &&
-                  user.sos == false
-                ) {
-                  user.sos = true;
-                  this.notificationService.sendToGroups({
-                    userID: user.userID,
-                    groupID: group.groupID,
-                    title: 'سلامتي - إشعار خطر',
-                    content: `${user.userName} في وضع الخطر`,
-                  });
-                }
-                if (
-                  Date.now() - user.location.time > 1000 * 60 * 45 &&
-                  user.socketID == null &&
-                  user.offline == false
-                ) {
-                  user.offline = true;
-                  let account = await this.accountRepository.findOneBy({
-                    userID: user.userID,
-                  });
-                  let locationsArray = account.lastLocation.filter(
-                    (oneGroup) => oneGroup.groupID != group.groupID,
-                  );
-                  locationsArray = [
-                    ...locationsArray,
-                    { groupID: group.groupID, location: user.location },
-                  ];
-                  if (user.sos) {
-                    account.lastLocation = locationsArray;
-                    account.sos = user.sos;
-                    account.path = { groupID: group.groupID, path: user.path };
-                    if (Object.keys(user.destination).length > 0)
-                      account.destination = {
-                        groupID: group.groupID,
-                        destination: user.destination,
-                      };
-                    await this.accountRepository.save(account);
-                  } else {
-                    account.lastLocation = locationsArray;
-                    account.sos = user.sos;
-                    if (Object.keys(user.destination).length > 0)
-                      account.destination = {
-                        groupID: group.groupID,
-                        destination: user.destination,
-                      };
-                    await this.accountRepository.save(account);
-                  }
-                  return user;
-                } else if (
-                  Date.now() - user.location.time > 1000 * 60 * 30 &&
-                  user.socketID == null &&
-                  user.notificationSent == false
-                ) {
-                  user.notificationSent = true;
-                  this.notificationService.sendToGroups({
-                    userID: user.userID,
-                    groupID: group.groupID,
-                    title: 'سلامتي - إشعار تفقد',
-                    content: `لم يرسل ${user.userName} موقعه ل ${group.groupName} منذ 30 دقيقة`,
-                  });
-                  return user;
+    setInterval(async () => {
+      allGroups = await Promise.all(
+        allGroups.map(async (group) => {
+          group.members = await Promise.all(
+            group.members.map(async (user) => {
+              if (
+                user.destination?.estimatedTime < Date.now() + 1000 * 60 * 5 &&
+                user.notificationDes == false
+              ) {
+                user.notificationDes = true;
+                this.notificationService.sendToUser({
+                  userID: user.userID,
+                  title: 'سلامتي - إشعار تفقد',
+                  groupID: null,
+                  content: `بقي أقل من 5 دقائق على نهاية رحلتك، هل تريد زيادة المدة؟`,
+                });
+              }
+              if (
+                user.destination?.estimatedTime < Date.now() &&
+                user.sos == false
+              ) {
+                user.sos = true;
+                this.notificationService.sendToGroups({
+                  userID: user.userID,
+                  groupID: group.groupID,
+                  title: 'سلامتي - إشعار خطر',
+                  content: `${user.userName} في وضع الخطر`,
+                });
+              }
+              if (
+                Date.now() - user.location.time > 1000 * 60 * 45 &&
+                user.socketID == null &&
+                user.offline == false
+              ) {
+                user.offline = true;
+                let account = await this.accountRepository.findOneBy({
+                  userID: user.userID,
+                });
+                let locationsArray = account.lastLocation.filter(
+                  (oneGroup) => oneGroup.groupID != group.groupID,
+                );
+                locationsArray = [
+                  ...locationsArray,
+                  { groupID: group.groupID, location: user.location },
+                ];
+                if (user.sos) {
+                  account.lastLocation = locationsArray;
+                  account.sos = user.sos;
+                  account.path = { groupID: group.groupID, path: user.path };
+                  if (Object.keys(user.destination).length > 0)
+                    account.destination = {
+                      groupID: group.groupID,
+                      destination: user.destination,
+                    };
+                  await this.accountRepository.save(account);
                 } else {
-                  return user;
+                  account.lastLocation = locationsArray;
+                  account.sos = user.sos;
+                  if (Object.keys(user.destination).length > 0)
+                    account.destination = {
+                      groupID: group.groupID,
+                      destination: user.destination,
+                    };
+                  await this.accountRepository.save(account);
                 }
-              }),
-            );
-            return group;
-          }),
-        );
-        deleteOfflineUsersFromAllGroups();
-      },
-      1000 * 60 * 3,
-    );
+                return user;
+              } else if (
+                Date.now() - user.location.time > 1000 * 60 * 30 &&
+                user.socketID == null &&
+                user.notificationSent == false
+              ) {
+                user.notificationSent = true;
+                this.notificationService.sendToGroups({
+                  userID: user.userID,
+                  groupID: group.groupID,
+                  title: 'سلامتي - إشعار تفقد',
+                  content: `لم يرسل ${user.userName} موقعه ل ${group.groupName} منذ 30 دقيقة`,
+                });
+                return user;
+              } else {
+                return user;
+              }
+            }),
+          );
+          return group;
+        }),
+      );
+      deleteOfflineUsersFromAllGroups();
+    }, 1000 * 60);
   }
 
   async handleConnection(client: Socket) {
