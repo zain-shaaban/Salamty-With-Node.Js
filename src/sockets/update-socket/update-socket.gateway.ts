@@ -47,8 +47,8 @@ export class UpdateSocketGateway
   }
 
   newGroup(userID: string) {
-    const { socketID } = idPairs.find((user) => user.userID == userID);
-    this.io.to(socketID).emit('groupChange');
+    const user = idPairs.find((user) => user.userID == userID);
+    if (user) this.io.to(user.socketID).emit('groupChange');
   }
 
   joinedGroup(members: string[]) {
