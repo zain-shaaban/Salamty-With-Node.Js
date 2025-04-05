@@ -384,7 +384,7 @@ export class SocketsGateway
   @SubscribeMessage('changeTime')
   changeTimeForTrip(
     @ConnectedSocket() client: Socket,
-    @MessageBody() changeTimeData: { increate: boolean; amount: number },
+    @MessageBody() changeTimeData: { increase: boolean; amount: number },
   ) {
     try {
       const { userID, groupID } = this.getDetails(client);
@@ -392,12 +392,18 @@ export class SocketsGateway
       let myUser = myGroup.members.find((user) => user.userID == userID);
       if (Object.keys(myUser.destination).length == 0)
         throw new Error('the trip does not exist');
-      if (changeTimeData.increate == true)
+      if (changeTimeData.increase == true)
         myUser.destination.estimatedTime =
           myUser.destination.estimatedTime + changeTimeData.amount;
       else
         myUser.destination.estimatedTime =
           myUser.destination.estimatedTime - changeTimeData.amount;
+      client.broadcast
+        .to(groupID)
+        .emit('destinationTimeChange', {
+          userID,
+          estimatedTime: myUser.destination.estimatedTime,
+        });
       return {
         status: true,
         data: null,
