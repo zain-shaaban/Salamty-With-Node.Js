@@ -3,17 +3,18 @@ import {
   IsString,
   MaxLength,
   IsEmail,
+  MinLength,
 } from 'class-validator';
 
 export class VerifyOTPDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Email is required.' })
   @MaxLength(200)
-  @IsEmail()
+  @IsEmail({}, { message: 'Email must be a valid email address.' })
   email: string;
 
   @IsString()
-  @IsNotEmpty()
-  @MaxLength(200)
+  @IsNotEmpty({ message: 'OTP code is required.' })
+  @MaxLength(6, { message: 'OTP code must be exactly 6 digits' })
+  @MinLength(6, { message: 'OTP code must be exactly 6 digits' })
   otp: string;
 }

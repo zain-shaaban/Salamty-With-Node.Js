@@ -27,62 +27,64 @@ export class AccountService {
     private readonly jwtService: JwtService,
     private readonly otpService: OTPService,
   ) {}
-  async signUp(signUpDto: SignUpDto) {
+  async signUp(signUpDto: SignUpDto): Promise<null> {
     const { email, password, userName } = signUpDto;
     await this.accountRepository.insert({
       email,
       userName,
-      password: bcrypt.hashSync(password),
+      password: bcrypt.hashSync(password, bcrypt.genSaltSync()),
       confirmed: false,
     });
     this.otpService.sendOTP(email);
     return null;
   }
 
-  async login(loginDto: LoginDto) {
+  async login(
+    loginDto: LoginDto,
+  ): Promise<{ authToken: string; userName: string }> {
     const { email, password } = loginDto;
     const user = await this.accountRepository.findOneBy({ email });
-    if (!user) throw new UnauthorizedException('Wrong credentials');
+    if (!user) throw new UnauthorizedException('Invalid email or password');
+
     const auth = bcrypt.compareSync(password, user.password);
-    if (!auth) throw new UnauthorizedException('Wrong credentials');
+    if (!auth) throw new UnauthorizedException('Invalid email or password');
+
     if (!user.confirmed)
-      throw new UnauthorizedException('the email is unconfirmed');
+      throw new UnauthorizedException('The email is unconfirmed');
+
     const authToken = this.jwtService.sign({
       userID: user.userID,
       userName: user.userName,
     });
-    await this.accountRepository.save(user);
+
     return { authToken, userName: user.userName };
   }
 
-  async verifyOTP(verifyOTPDto: VerifyOTPDto) {
+  async verifyOTP(
+    verifyOTPDto: VerifyOTPDto,
+  ): Promise<{ authToken: string; secretKey: string }> {
     const { email, otp } = verifyOTPDto;
-    const verify = await this.otpService.verifyOTP(email, otp);
-    if (!verify) throw new UnauthorizedException('Invalid otp');
-    const user = await this.accountRepository.findOneBy({ email });
-    if (!user) throw new NotFoundException();
-    user.confirmed = true;
-    user.secretKey = uuid();
+    const isOtpValid = await this.otpService.verifyOTP(email, otp);
+    if (!isOtpValid.status) throw new UnauthorizedException('Invalid OTP');
     const authToken = this.jwtService.sign({
-      userID: user.userID,
-      userName: user.userName,
+      userID: isOtpValid.data.userID,
+      userName: isOtpValid.data.userName,
     });
-    await this.accountRepository.save(user);
-    return { authToken, secretKey: user.secretKey };
+    return { authToken, secretKey: isOtpValid.data.secretKey };
   }
 
-  async regenerate(userID: string) {
+  async regenerate(userID: string): Promise<{ secretKey: string }> {
     const user = await this.accountRepository.findOneBy({ userID });
-    if (!user) throw new NotFoundException();
+    if (!user) throw new NotFoundException('User not found');
     user.secretKey = uuid();
     await this.accountRepository.save(user);
     return { secretKey: user.secretKey };
   }
 
   async updateNotificationToken(
-    updateNotificationTokenDto: UpdateNotificationTokenDto,
     userID: string,
-  ) {
+    updateNotificationTokenDto: UpdateNotificationTokenDto,
+  ): Promise<null> {
     const { notificationToken } = updateNotificationTokenDto;
     await this.accountRepository.update({ userID }, { notificationToken });
     return null;
@@ -90,16 +92,27 @@ export class AccountService {
 
   async sendNewLocation(sendLocationDto: SendLocationDto, userID: string) {
     const { groupID, location } = sendLocationDto;
-    const group = allGroups.find((group) => group.groupID == groupID);
-    if (!group) throw new NotFoundException();
-    const oneUser = group.members.find((user) => user.userID == userID);
-    if (!oneUser) throw new NotFoundException();
-    if (oneUser.sos) oneUser.path.push(location);
-    oneUser.location = location;
-    oneUser.notificationSent = false;
-    oneUser.offline = false;
-   // oneUser.location.time = oneUser.location.time * 1000;
-    this.socketsGateway.sendNewLocation(groupID, userID, location, oneUser.sos);
+    const group = allGroups.find((group) => group.groupID === groupID);
+    if (!group)
+      throw new NotFoundException(`Group with id ${groupID} not found`);
+    const userInGroup = group.members.find((user) => user.userID === userID);
+    if (!userInGroup)
+      throw new NotFoundException(
+        `User with id ${userID} not found in group ${groupID}`,
+      );
+
+    userInGroup.location = location;
+    userInGroup.notificationSent = false;
+    userInGroup.offline = false;
+
+    if (userInGroup.sos) userInGroup.path.push(location);
+    // userInGroup.location.time = oneUser.location.time * 1000;
+    this.socketsGateway.sendNewLocation(
+      groupID,
+      userID,
+      location,
+      userInGroup.sos,
+    );
     return null;
   }
 

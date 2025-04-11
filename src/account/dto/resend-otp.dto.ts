@@ -1,9 +1,8 @@
-import { IsNotEmpty, IsString, MaxLength, IsEmail } from 'class-validator';
+import { IsNotEmpty, MaxLength, IsEmail } from 'class-validator';
 
 export class ResendOtpDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Email is required.' })
   @MaxLength(200)
-  @IsEmail()
+  @IsEmail({}, { message: 'Email must be a valid email address.' })
   email: string;
 }

@@ -1,12 +1,13 @@
+import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
-  Max,
+  ValidateNested,
 } from 'class-validator';
 
-class coords {
+class CoordsDto {
   @IsNumber()
   @IsNotEmpty()
   lat: number;
@@ -16,8 +17,11 @@ class coords {
   lng: number;
 }
 
-class location {
-  coords: coords;
+class LocationDto {
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => CoordsDto)
+  coords: CoordsDto;
 
   @IsNumber()
   @IsNotEmpty()
@@ -26,9 +30,11 @@ class location {
 
 export class SendLocationDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Group ID is required.' })
   groupID: string;
 
   @IsOptional()
-  location: location;
+  @ValidateNested()
+  @Type(() => LocationDto)
+  location?: LocationDto;
 }

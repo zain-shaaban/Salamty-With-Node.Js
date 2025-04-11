@@ -42,8 +42,8 @@ export class AccountController {
   ) {
     return await asyncHandler(
       this.accountService.updateNotificationToken(
-        updateNotificationTokenDto,
         request.user.userID,
+        updateNotificationTokenDto,
       ),
     );
   }

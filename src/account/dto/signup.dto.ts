@@ -8,18 +8,17 @@ import {
 
 export class SignUpDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Username is required.' })
   @MaxLength(200)
   userName: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Email is required.' })
   @MaxLength(200)
-  @IsEmail()
+  @IsEmail({}, { message: 'Email must be a valid email address.' })
   email: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Password is required.' })
   @MinLength(6)
   @MaxLength(200)
   password: string;

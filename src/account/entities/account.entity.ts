@@ -1,5 +1,32 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+interface Coords {
+  lat: number;
+  lng: number;
+}
+
+interface Location {
+  time: number;
+  coords: Coords;
+}
+
+interface LastLocation {
+  groupID: string;
+  location: Location;
+}
+
+interface Path {
+  groupID: string;
+  path: Location[];
+}
+
+interface Destination {
+  groupID: string;
+  destination: {
+    coords: Coords;
+    estimatedTime: number;
+  };
+}
 @Entity('salamty_accounts')
 export class Account {
   @PrimaryGeneratedColumn('uuid')
@@ -15,41 +42,38 @@ export class Account {
   password: string;
 
   @Column({ type: 'varchar', nullable: true })
-  secretKey: string;
+  secretKey: string | null;
 
   @Column({ type: 'boolean', default: false })
   confirmed: boolean;
 
   @Column({
     type: 'jsonb',
-    nullable: true,
     default: [],
   })
-  lastLocation: any;
+  lastLocation: LastLocation[];
 
   @Column({ type: 'varchar', nullable: true })
-  notificationToken: string;
+  notificationToken: string | null;
 
   @Column({ type: 'varchar', nullable: true })
-  otp: string;
+  otp: string | null;
 
   @Column({ type: 'bigint', nullable: true })
-  otpExpiry: number;
+  otpExpiry: number | null;
 
   @Column({ type: 'boolean', default: false })
   sos: boolean;
 
   @Column({
     type: 'jsonb',
-    nullable: true,
     default: {},
   })
-  path: any;
+  path: Path;
 
   @Column({
     type: 'jsonb',
-    nullable: true,
     default: {},
   })
-  destination: any;
+  destination: Destination;
 }

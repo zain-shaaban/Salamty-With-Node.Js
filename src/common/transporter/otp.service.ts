@@ -5,6 +5,7 @@ import { Account } from 'src/account/entities/account.entity';
 import { logger } from '../error_logger/logger.util';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class OTPService {
@@ -79,7 +80,7 @@ export class OTPService {
     try {
       await Promise.all([
         this.transporter.sendMail(mailOptions),
-       this.accountRepository.save(account),
+        this.accountRepository.save(account),
       ]);
     } catch (error) {
       logger.error(error.message, error.stack);
@@ -90,12 +91,23 @@ export class OTPService {
   async verifyOTP(email: string, sendOTP: string) {
     const account = await this.accountRepository.findOne({ where: { email } });
     if (!account?.otp) {
-      return false;
+      return { status: false };
     }
     if (sendOTP == account.otp && Date.now() < account.otpExpiry) {
-      await this.accountRepository.update(account.userID,{ otp: null, otpExpiry: null });
-      return true;
+      account.otp = null;
+      account.otpExpiry = null;
+      account.confirmed = true;
+      account.secretKey = uuid();
+      await this.accountRepository.save(account);
+      return {
+        status: true,
+        data: {
+          userID: account.userID,
+          userName: account.userName,
+          secretKey: account.secretKey,
+        },
+      };
     }
-    return false;
+    return { status: false };
   }
 }
