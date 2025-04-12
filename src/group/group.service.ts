@@ -16,73 +16,87 @@ export class GroupService {
     @Inject() private readonly updateGateway: UpdateSocketGateway,
   ) {}
 
-  async createNewGroup(createGroupDto: CreateGroupDto, userID: string) {
-    const { groupName } = createGroupDto;
-    const { groupID } = await this.groupRepository.save({
+  async createNewGroup(
+    { groupName }: CreateGroupDto,
+    userID: string,
+  ): Promise<{ groupID: string }> {
+    const savedGroup = await this.groupRepository.save({
       groupName,
       members: [userID],
     });
-    return { groupID };
+    return { groupID: savedGroup.groupID };
   }
 
-  async addUserToGroup(addUserToGroupDto: AddUserToGroupDto, userID: string) {
-    const { groupID, secretKey } = addUserToGroupDto;
+  async addUserToGroup(
+    { groupID, secretKey }: AddUserToGroupDto,
+    userID: string,
+  ): Promise<{ userName: string; userID: string }> {
     const group = await this.groupRepository.findOneBy({ groupID });
-    if (!group || !group.members.find((id) => id == userID))
-      throw new NotFoundException('The group does not exist');
-    const user = await this.accountRepository.findOneBy({ secretKey });
-    if (!user) throw new NotFoundException('user not found');
-    if (!group.members.find((id) => id == user.userID)) {
-      this.updateGateway.newGroup(user.userID);
-      this.updateGateway.joinedGroup(
-        group.members.filter((user) => user != userID),
-      );
-      group.members.push(user.userID);
-      await this.groupRepository.save(group);
-    }
 
+    const isUserInGroup = group?.members.includes(userID);
+
+    if (!isUserInGroup)
+      throw new NotFoundException(
+        'The group does not exist or access is denied',
+      );
+    const user = await this.accountRepository.findOneBy({ secretKey });
+    if (!user) throw new NotFoundException('User not found');
+
+    const isAlreadyMember = group.members.includes(user.userID);
+
+    if (!isAlreadyMember) {
+      this.updateGateway.newGroup(user.userID);
+
+      const otherMembers = group.members.filter((user) => user !== userID);
+      this.updateGateway.joinedGroup(otherMembers);
+      group.members.push(user.userID);
+      this.groupRepository.save(group);
+    }
     return { userName: user.userName, userID: user.userID };
   }
 
-  async leaveGroup(leaveGroupDto: LeaveGroupDto, userID: string) {
-    const { groupID } = leaveGroupDto;
+  async leaveGroup({ groupID }: LeaveGroupDto, userID: string): Promise<null> {
     const group = await this.groupRepository.findOneBy({ groupID });
-    if (!group) throw new NotFoundException('the group does not exist');
-    group.members = group.members.filter((id) => id != userID);
+    if (!group) throw new NotFoundException('Group not found');
+    group.members = group.members.filter((id) => id !== userID);
+
     if (group.members.length == 0) await this.groupRepository.remove(group);
-    else {
-      await this.groupRepository.save(group);
-    }
+    else await this.groupRepository.save(group);
+
     const account = await this.accountRepository.findOneBy({ userID });
+
+    if (!account) throw new NotFoundException('Account not found');
+
     account.lastLocation = account.lastLocation.filter(
-      (location) => location.groupID != groupID,
+      (location) => location.groupID !== groupID,
     );
     this.updateGateway.leftGroup(group.members);
     await this.accountRepository.save(account);
     return null;
   }
 
-  async getGroups(userID: string) {
+  async getGroups(userID: string): Promise<
+    {
+      groupID: string;
+      groupName: string;
+      members: { userID: string; userName: string }[];
+    }[]
+  > {
     const groups = await this.groupRepository.find({
       where: {
         members: ArrayContains([userID]),
       },
     });
-    return Promise.all(
+
+    const enrichedGroups = await Promise.all(
       groups.map(async (group) => {
-        return await this.accountRepository
-          .find({
-            where: { userID: In(group.members) },
-            select: { userName: true, userID: true },
-          })
-          .then((accounts) => {
-            group.members = accounts.map((account) => ({
-              userName: account.userName,
-              userID: account.userID,
-            }));
-            return group;
-          });
+        const memberAccounts = await this.accountRepository.find({
+          where: { userID: In(group.members) },
+          select: { userID: true, userName: true },
+        });
+        return { ...group, members: memberAccounts };
       }),
     );
+    return enrichedGroups;
   }
 }

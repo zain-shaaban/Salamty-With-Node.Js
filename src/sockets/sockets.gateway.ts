@@ -1,4 +1,4 @@
-import { Inject, Logger, NotFoundException } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -12,8 +12,8 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Account } from 'src/account/entities/account.entity';
+import { logger } from 'src/common/error_logger/logger.util';
 
-import { ErrorLoggerService } from 'src/common/error_logger/error_logger.service';
 import { Group } from 'src/group/entities/group.entity';
 import { NotificationService } from 'src/notification/notification.service';
 import { In, Repository } from 'typeorm';
@@ -35,7 +35,6 @@ export class SocketsGateway
   io: Server;
 
   constructor(
-    private readonly logger: ErrorLoggerService,
     @InjectRepository(Account) private accountRepository: Repository<Account>,
     @InjectRepository(Group) private groupRepository: Repository<Group>,
     @Inject() private readonly notificationService: NotificationService,
@@ -275,7 +274,7 @@ export class SocketsGateway
       this.sendNewLocation(groupID, userID, location, user.sos);
       return { status: true };
     } catch (error) {
-      this.logger.error(error.message, error.stack);
+      logger.error(error.message, error.stack);
       client.disconnect();
     }
   }
@@ -296,7 +295,7 @@ export class SocketsGateway
         status: true,
       };
     } catch (error) {
-      this.logger.error(error.message, error.stack);
+      logger.error(error.message, error.stack);
       return {
         status: false,
         message: error.message,
@@ -318,7 +317,7 @@ export class SocketsGateway
       let myUser = myGroup.members.find((user) => user.userID == userID);
       myUser.sos = true;
     } catch (error) {
-      this.logger.error(error.message, error.stack);
+      logger.error(error.message, error.stack);
       return {
         status: false,
         message: error.message,
@@ -345,7 +344,7 @@ export class SocketsGateway
         this.accountRepository.update(userID, { destination: {} });
       }
     } catch (error) {
-      this.logger.error(error.message, error.stack);
+      logger.error(error.message, error.stack);
       return {
         status: false,
         message: error.message,
@@ -373,7 +372,7 @@ export class SocketsGateway
         data: true,
       };
     } catch (error) {
-      this.logger.error(error.message, error.stack);
+      logger.error(error.message, error.stack);
       return {
         status: false,
         message: error.message,
@@ -407,7 +406,7 @@ export class SocketsGateway
         data: null,
       };
     } catch (error) {
-      this.logger.error(error.message, error.stach);
+      logger.error(error.message, error.stach);
       return {
         status: false,
         message: error.message,
@@ -431,7 +430,7 @@ export class SocketsGateway
         data: null,
       };
     } catch (error) {
-      this.logger.error(error.message, error.stack);
+      logger.error(error.message, error.stack);
       return {
         status: false,
         message: error.message,

@@ -10,17 +10,17 @@ export class ErrorLoggerService implements LoggerService {
     private errorLoggerRepository: Repository<ErrorLogger>,
   ) {}
 
-  async error(message: string, stack: string) {
+  async error(message: string, stack: string): Promise<void> {
     await this.errorLoggerRepository.insert({ message, stack });
   }
 
-  async findAll() {
+  async findAll(): Promise<Partial<ErrorLogger>[]> {
     return await this.errorLoggerRepository.find({
       select: ['errorID', 'message', 'timestamp'],
     });
   }
 
-  async findOne(errorID: number) {
+  async findOne(errorID: number): Promise<ErrorLogger> {
     return await this.errorLoggerRepository.findOne({ where: { errorID } });
   }
   log(message: string) {}

@@ -1,11 +1,11 @@
-import { IsNotEmpty, IsNumber, IsString, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class AddUserToGroupDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Group id is required.' })
   groupID: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Secret key is required.' })
   secretKey: string;
 }

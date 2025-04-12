@@ -9,5 +9,5 @@ export class Group {
   groupName: string;
 
   @Column('text', { array: true })
-  members: any;
+  members: string[];
 }

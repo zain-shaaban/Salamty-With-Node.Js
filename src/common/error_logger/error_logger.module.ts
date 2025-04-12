@@ -10,7 +10,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [TypeOrmModule.forFeature([ErrorLogger])],
   controllers: [ErrorLoggerController],
   providers: [ErrorLoggerService],
-  exports:[ErrorLoggerService]
 })
 export class ErrorLoggerModule implements OnModuleInit {
   constructor(private readonly errorLogger: ErrorLoggerService) {}

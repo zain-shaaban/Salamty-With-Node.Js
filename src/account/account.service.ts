@@ -90,7 +90,10 @@ export class AccountService {
     return null;
   }
 
-  async sendNewLocation(sendLocationDto: SendLocationDto, userID: string) {
+  async sendNewLocation(
+    sendLocationDto: SendLocationDto,
+    userID: string,
+  ): Promise<null> {
     const { groupID, location } = sendLocationDto;
     const group = allGroups.find((group) => group.groupID === groupID);
     if (!group)
@@ -116,7 +119,7 @@ export class AccountService {
     return null;
   }
 
-  async resetOTP(resendOtpDto: ResendOtpDto) {
+  async resetOTP(resendOtpDto: ResendOtpDto): Promise<null> {
     const { email } = resendOtpDto;
     this.otpService.sendOTP(email);
     return null;

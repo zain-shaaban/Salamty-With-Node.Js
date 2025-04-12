@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsString,  } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class LeaveGroupDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Group id is required.' })
   groupID: string;
 }
