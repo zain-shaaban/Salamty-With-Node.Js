@@ -15,13 +15,21 @@ export class NotificationService {
     private readonly firebaseService: FirebaseService,
   ) {}
 
-  async sendToGroups(createNotificationDto: CreateNotificationDto) {
+  async sendToGroups({
+    userID,
+    groupID,
+    title,
+    content,
+  }: CreateNotificationDto): Promise<null | {
+    status: boolean;
+    message: string;
+  }> {
     try {
-      const { userID, groupID, title, content } = createNotificationDto;
       let group = await this.groupRepository.findOneBy({ groupID });
+      const otherGroupMembers = group.members.filter((user) => user !== userID);
       const accounts = await this.accountRepository.find({
         where: {
-          userID: In(group.members.filter((user) => user != userID)),
+          userID: In(otherGroupMembers),
         },
         select: ['notificationToken'],
       });
@@ -47,15 +55,20 @@ export class NotificationService {
     }
   }
 
-  async sendToUser(createNotificationDto: CreateNotificationDto) {
+  async sendToUser(
+    {userID,title,content}: CreateNotificationDto,
+  ): Promise<null | {
+    status: boolean;
+    message: string;
+  }> {
     try {
-      const { userID, title, content } = createNotificationDto;
       const account = await this.accountRepository.findOne({
         where: {
           userID,
         },
         select: ['notificationToken'],
       });
+
       const message = {
         token: account.notificationToken,
         notification: {
@@ -63,6 +76,7 @@ export class NotificationService {
           body: content,
         },
       };
+
       await this.firebaseService.messaging().send(message);
       return null;
     } catch (error) {
