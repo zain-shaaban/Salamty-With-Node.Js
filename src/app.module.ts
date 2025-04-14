@@ -5,16 +5,18 @@ import dbConfig from './config/db.config';
 import { JwtModule } from '@nestjs/jwt';
 import { ErrorLoggerModule } from './common/error_logger/error_logger.module';
 import { GroupModule } from './group/group.module';
-import { SocketsModule } from './sockets/sockets.module';
+import { SocketsModule } from './gateway/sockets.module';
 import { NotificationModule } from './notification/notification.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Account } from './account/entities/account.entity';
 import { Group } from './group/entities/group.entity';
 import { ErrorLogger } from './common/error_logger/entities/error_logger.entity';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true, load: [dbConfig] }),
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({

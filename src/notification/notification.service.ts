@@ -15,7 +15,7 @@ export class NotificationService {
     private readonly firebaseService: FirebaseService,
   ) {}
 
-  async sendToGroups({
+  async sendToGroup({
     userID,
     groupID,
     title,

@@ -14,7 +14,7 @@ import { v4 as uuid } from 'uuid';
 import { VerifyOTPDto } from './dto/verify.dto';
 import { UpdateNotificationTokenDto } from './dto/update-notification-token.dto';
 import { SendLocationDto } from './dto/send-location.dto';
-import { allGroups, SocketsGateway } from 'src/sockets/sockets.gateway';
+import { SocketsService } from 'src/gateway/sockets.service';
 import { ResendOtpDto } from './dto/resend-otp.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -23,7 +23,7 @@ import { Repository } from 'typeorm';
 export class AccountService {
   constructor(
     @InjectRepository(Account) private accountRepository: Repository<Account>,
-    @Inject() private readonly socketsGateway: SocketsGateway,
+    @Inject() private readonly socketsService: SocketsService,
     private readonly jwtService: JwtService,
     private readonly otpService: OTPService,
   ) {}
@@ -95,7 +95,7 @@ export class AccountService {
     userID: string,
   ): Promise<null> {
     const { groupID, location } = sendLocationDto;
-    const group = allGroups.find((group) => group.groupID === groupID);
+    const group = this.socketsService.allGroups.find((group) => group.groupID === groupID);
     if (!group)
       throw new NotFoundException(`Group with id ${groupID} not found`);
     const userInGroup = group.members.find((user) => user.userID === userID);
@@ -110,7 +110,7 @@ export class AccountService {
 
     if (userInGroup.sos) userInGroup.path.push(location);
     // userInGroup.location.time = oneUser.location.time * 1000;
-    this.socketsGateway.sendNewLocation(
+    this.socketsService.sendNewLocation(
       groupID,
       userID,
       location,

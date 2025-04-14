@@ -10,7 +10,7 @@ export class NotificationController {
   @Post('send')
   async create(@Body() createNotificationDto: CreateNotificationDto) {
     return await asyncHandler(
-      this.notificationService.sendToGroups(createNotificationDto),
+      this.notificationService.sendToGroup(createNotificationDto),
     );
   }
 }

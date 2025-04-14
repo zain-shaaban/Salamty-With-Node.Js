@@ -6,7 +6,7 @@ import { Account } from 'src/account/entities/account.entity';
 import { LeaveGroupDto } from './dto/leave-group.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository, ArrayContains } from 'typeorm';
-import { UpdateSocketGateway } from 'src/sockets/update-socket/update-socket.gateway';
+import { UpdateSocketGateway } from 'src/gateway/update-socket/update-socket.gateway';
 
 @Injectable()
 export class GroupService {
