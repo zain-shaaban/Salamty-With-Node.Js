@@ -22,7 +22,7 @@ export class SocketsGateway
 
   async handleConnection(client: Socket) {
     try {
-      await this.socketsService.handleUserConnection(client);
+      await this.socketsService.handleUserConnection(client, this.io);
       return { status: true };
     } catch (error) {
       logger.error(error.message, error.stack);
@@ -122,7 +122,7 @@ export class SocketsGateway
   @SubscribeMessage('endTrip')
   endTrip(@ConnectedSocket() client: Socket) {
     try {
-      this.socketsService.handleEndTrip(client)
+      this.socketsService.handleEndTrip(client);
       return {
         status: true,
       };

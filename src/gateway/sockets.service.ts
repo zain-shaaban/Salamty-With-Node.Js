@@ -33,10 +33,9 @@ export class SocketsService {
     private readonly jwtService: JwtService,
   ) {}
 
-  private io: Server;
   public allGroups: GroupSession[] = [];
 
-  async handleUserConnection(client: Socket) {
+  async handleUserConnection(client: Socket, io: Server) {
     const { userID, groupID, socketID, location } = this.getDetails(client);
 
     const group = await this.groupRepository.findOneBy({ groupID });
@@ -61,6 +60,7 @@ export class SocketsService {
 
     this.handleOnConnectionEvent(client, myGroup, userID);
     this.sendNewLocation(
+      io,
       myGroup.groupID,
       userID,
       location,
@@ -255,6 +255,7 @@ export class SocketsService {
   }
 
   sendNewLocation(
+    io: Server,
     groupID: string,
     userID: string,
     location: LocationType,
@@ -264,12 +265,8 @@ export class SocketsService {
     group.members
       .filter((member) => member.userID !== userID && member.socketID)
       .forEach(({ socketID }) => {
-        this.io.to(socketID).emit('location', { userID, location, sos });
+        io.to(socketID).emit('location', { userID, location, sos });
       });
-  }
-
-  setSocketServer(server: Server) {
-    this.io = server;
   }
 
   @Interval(60000)
@@ -277,6 +274,7 @@ export class SocketsService {
     this.allGroups = await Promise.all(
       this.allGroups.map((group) => this.processGroup(group)),
     );
+    this.deleteOfflineUsersFromAllGroups();
   }
 
   private async processGroup(group: GroupSession) {
