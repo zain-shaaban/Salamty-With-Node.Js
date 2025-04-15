@@ -13,6 +13,7 @@ import {
   UserType,
 } from './interfaces/group.interface';
 import { Server } from 'socket.io';
+import { logger } from 'src/common/error_logger/logger.util';
 
 interface Destination {
   coords: { lat: number; lng: number };
@@ -26,6 +27,9 @@ interface ChangeTime {
 
 @Injectable()
 export class SocketsService {
+  private io: Server;
+  public allGroups: GroupSession[] = [];
+
   constructor(
     @InjectRepository(Account) private accountRepository: Repository<Account>,
     @InjectRepository(Group) private groupRepository: Repository<Group>,
@@ -33,10 +37,9 @@ export class SocketsService {
     private readonly jwtService: JwtService,
   ) {}
 
-  public allGroups: GroupSession[] = [];
-
-  async handleUserConnection(client: Socket, io: Server) {
-    const { userID, groupID, socketID, location } = this.getDetails(client);
+  async handleUserConnection(client: Socket) {
+    const { userID, groupID, socketID, location, userName } =
+      this.getDetails(client);
 
     const group = await this.groupRepository.findOneBy({ groupID });
 
@@ -48,19 +51,23 @@ export class SocketsService {
     let myGroup: GroupSession = this.allGroups.find(
       (g) => g.groupID === groupID,
     );
-
     if (!myGroup) {
       myGroup = await this.createNewGroup(group, userID, socketID, location);
       this.allGroups.push(myGroup);
     } else {
-      await this.updateExistingGroup(myGroup, userID, socketID, location);
+      await this.updateExistingGroup(
+        myGroup,
+        userID,
+        socketID,
+        location,
+        userName,
+      );
     }
 
     client.join(groupID);
 
     this.handleOnConnectionEvent(client, myGroup, userID);
     this.sendNewLocation(
-      io,
       myGroup.groupID,
       userID,
       location,
@@ -215,6 +222,7 @@ export class SocketsService {
     userID: string,
     socketID: string,
     location: LocationType,
+    userName: string,
   ) {
     const member = group.members.find((u) => u.userID === userID);
     if (member) {
@@ -223,8 +231,21 @@ export class SocketsService {
         socketID,
         location,
         notificationSent: false,
-        notificationDes: true,
+        notificationDes: false,
         offline: false,
+      });
+    } else {
+      group.members.push({
+        userID,
+        userName,
+        socketID,
+        location,
+        notificationSent: false,
+        offline: false,
+        sos: false,
+        path: [],
+        destination: <any>{},
+        notificationDes: false,
       });
     }
   }
@@ -236,7 +257,7 @@ export class SocketsService {
   ) {
     let currentUser = myGroup?.members?.find((u) => u.userID === userID);
 
-    const groupMemebers =
+    const groupMembers =
       myGroup?.members?.map(({ userID, location, sos, path, destination }) => ({
         userID,
         location,
@@ -246,7 +267,7 @@ export class SocketsService {
       })) ?? [];
 
     client.emit('onConnection', {
-      groupMemebers: groupMemebers.filter((m) => m.userID !== userID),
+      groupMembers: groupMembers.filter((m) => m.userID !== userID) ?? [],
       session: {
         sos: currentUser?.sos,
         destination: currentUser?.destination,
@@ -255,7 +276,6 @@ export class SocketsService {
   }
 
   sendNewLocation(
-    io: Server,
     groupID: string,
     userID: string,
     location: LocationType,
@@ -265,7 +285,7 @@ export class SocketsService {
     group.members
       .filter((member) => member.userID !== userID && member.socketID)
       .forEach(({ socketID }) => {
-        io.to(socketID).emit('location', { userID, location, sos });
+        this.io.to(socketID).emit('location', { userID, location, sos });
       });
   }
 
@@ -286,7 +306,6 @@ export class SocketsService {
 
   private async processUser(user: UserType, group: GroupSession) {
     const now = Date.now();
-
     if (this.shouldSendDestinationReminder(user, now)) {
       user.notificationDes = true;
       this.notificationService.sendToUser({
@@ -343,7 +362,6 @@ export class SocketsService {
         content: `لم يرسل ${user.userName} موقعه ل ${group.groupName} منذ 30 دقيقة`,
       });
     }
-
     return user;
   }
 
@@ -372,5 +390,9 @@ export class SocketsService {
       !user.socketID &&
       !user.notificationSent
     );
+  }
+
+  setSocketServer(server: Server) {
+    this.io = server;
   }
 }

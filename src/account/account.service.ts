@@ -95,7 +95,9 @@ export class AccountService {
     userID: string,
   ): Promise<null> {
     const { groupID, location } = sendLocationDto;
-    const group = this.socketsService.allGroups.find((group) => group.groupID === groupID);
+    const group = this.socketsService.allGroups.find(
+      (group) => group.groupID === groupID,
+    );
     if (!group)
       throw new NotFoundException(`Group with id ${groupID} not found`);
     const userInGroup = group.members.find((user) => user.userID === userID);
@@ -109,7 +111,7 @@ export class AccountService {
     userInGroup.offline = false;
 
     if (userInGroup.sos) userInGroup.path.push(location);
-    // userInGroup.location.time = oneUser.location.time * 1000;
+    //userInGroup.location.time *= 1000;
     this.socketsService.sendNewLocation(
       groupID,
       userID,

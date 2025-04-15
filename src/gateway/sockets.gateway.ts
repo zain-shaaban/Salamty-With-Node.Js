@@ -6,6 +6,7 @@ import {
   SubscribeMessage,
   ConnectedSocket,
   MessageBody,
+  OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { logger } from 'src/common/error_logger/logger.util';
@@ -13,19 +14,22 @@ import { SocketsService } from './sockets.service';
 
 @WebSocketGateway()
 export class SocketsGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
   @WebSocketServer()
   io: Server;
 
   constructor(private socketsService: SocketsService) {}
 
+  afterInit() {
+    this.socketsService.setSocketServer(this.io);
+  }
+
   async handleConnection(client: Socket) {
     try {
-      await this.socketsService.handleUserConnection(client, this.io);
+      await this.socketsService.handleUserConnection(client);
       return { status: true };
     } catch (error) {
-      logger.error(error.message, error.stack);
       client.disconnect();
     }
   }
@@ -111,7 +115,7 @@ export class SocketsGateway
         status: true,
       };
     } catch (error) {
-      logger.error(error.message, error.stach);
+      logger.error(error.message, error.stack);
       return {
         status: false,
         message: error.message,
