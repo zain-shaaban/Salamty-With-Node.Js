@@ -13,6 +13,8 @@ import { Account } from './account/entities/account.entity';
 import { Group } from './group/entities/group.entity';
 import { ErrorLogger } from './common/error_logger/entities/error_logger.entity';
 import { ScheduleModule } from '@nestjs/schedule';
+import { UpdatesModule } from './updates/updates.module';
+import { Update } from './updates/entities/update.entity';
 
 @Module({
   imports: [
@@ -26,7 +28,7 @@ import { ScheduleModule } from '@nestjs/schedule';
         username: configService.get('database.user'),
         database: configService.get('database.name'),
         password: configService.get('database.password'),
-        entities: [Account, Group, ErrorLogger],
+        entities: [Account, Group, ErrorLogger, Update],
         retryAttempts: 2,
         synchronize: true,
         logging: false,
@@ -47,6 +49,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     GroupModule,
     SocketsModule,
     FirebaseModule,
+    UpdatesModule,
   ],
 })
 export class AppModule {}
