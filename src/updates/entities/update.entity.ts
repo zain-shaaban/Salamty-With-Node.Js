@@ -5,12 +5,12 @@ export class Update {
   @PrimaryGeneratedColumn()
   updateID: number;
 
-  @Column('text', { nullable: false, default: "1.0.0" })
+  @Column('text', { default: '1.0.0' })
   appVersion: string;
 
-  @Column('text', { nullable: false, default: "1.0.0" })
+  @Column('text', { default: '1.0.0' })
   infoVersion: string;
 
-  @Column('text', { nullable: false, default: "" })
+  @Column('text', { default: '' })
   infoContent: string;
 }
