@@ -15,6 +15,7 @@ import { ErrorLogger } from './common/error_logger/entities/error_logger.entity'
 import { ScheduleModule } from '@nestjs/schedule';
 import { UpdatesModule } from './updates/updates.module';
 import { Update } from './updates/entities/update.entity';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -51,5 +52,6 @@ import { Update } from './updates/entities/update.entity';
     FirebaseModule,
     UpdatesModule,
   ],
+  controllers:[AppController]
 })
 export class AppModule {}
